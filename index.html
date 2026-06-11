@@ -569,23 +569,7 @@ function renderPizarraHoy(role){
   let html="";
   if(fer)html+=`<div class="alert warn" style="margin-bottom:14px">📅 Hoy está marcado como <b>feriado</b>. Igual puedes registrar si trabajaste.</div>`;
 
-  let people;
-  if(role==="colaborador")people=[uById(state.user.uid)].filter(Boolean);
-  else{
-    people=data.users.filter(u=>u.role!=="supervisor");
-    if(state.pizarraFocus!=="all")people=people.filter(u=>u.id===state.pizarraFocus);
-  }
-
-  if(role!=="colaborador"){
-    html+=`<div class="filterbar">
-      <select onchange="state.pizarraFocus=this.value;render()" style="width:auto;min-width:200px">
-        <option value="all" ${state.pizarraFocus==="all"?"selected":""}>Ver a todos</option>
-        ${data.users.filter(u=>u.role!=="supervisor").map(u=>`<option value="${u.id}" ${state.pizarraFocus===u.id?"selected":""}>${esc(u.name)}</option>`).join("")}
-      </select>
-    </div>`;
-  }
-
-  people.forEach(u=>{
+  const renderPersonBoard=(u,canInteract)=>{
     const items=data.boardItems.filter(b=>b.userId===u.id&&b.date===todayI);
     const byCol={};BOARD_COLS.forEach(c=>byCol[c.id]=[]);
     items.forEach(it=>{(byCol[it.col]||byCol.todo).push(it);});
@@ -593,31 +577,56 @@ function renderPizarraHoy(role){
     const hasDone=items.some(it=>it.col==="done");
     const cap=dailyCapacity(todayI);
     const capLabel=cap===4.5?"Sábado · 4.5h":"Jornada · 8h";
-    html+=`<div class="persongroup">
+    return `<div class="persongroup" style="${!canInteract?"opacity:0.85":""}">
       <div class="persongroup-h">
         <div class="avatar sm">${initials(u.name)}</div><b>${esc(u.name)}</b>
-        ${u.id===state.user.uid?'<span class="role colaborador">tú</span>':""}
+        ${isMe?'<span class="role colaborador">tú</span>':""}
+        ${!canInteract?'<span style="font-size:11px;color:var(--muted);margin-left:4px">👁️ solo lectura</span>':""}
         <div style="margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
           ${hasDone
             ?`<span style="display:inline-flex;align-items:center;gap:5px;background:#d1fae5;color:#065f46;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:500">✅ ${capLabel} registrada</span>`
             :items.length>0
               ?`<span style="display:inline-flex;align-items:center;gap:5px;background:#fef3c7;color:#92400e;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:500">🔨 ${capLabel} · en progreso</span>`
               :`<span style="display:inline-flex;align-items:center;gap:5px;background:#f1f5f9;color:var(--muted);padding:3px 10px;border-radius:999px;font-size:12px;font-weight:500">📋 ${capLabel} · sin actividad</span>`}
-          ${(role==="jefe"&&isMe)||(role!=="colaborador"&&u.id===state.user.uid)||isMe?`<button class="btn primary sm" onclick="openBoardItem(null,'${u.id}','${todayI}')">+ Agregar tarea</button>`:""}
+          ${canInteract?`<button class="btn primary sm" onclick="openBoardItem(null,'${u.id}','${todayI}')">+ Agregar tarea</button>`:""}
         </div>
       </div>
       <div class="persongroup-b">
         <div class="board">
-          ${BOARD_COLS.map(col=>`<div class="bcol" ondragover="event.preventDefault()" ondrop="dropBoardItem('${col.id}','${u.id}')">
+          ${BOARD_COLS.map(col=>`<div class="bcol" ${canInteract?`ondragover="event.preventDefault()" ondrop="dropBoardItem('${col.id}','${u.id}')"`:""}">
             <div class="bcol-h">${col.emoji} ${col.name} <span class="ct">${byCol[col.id].length}</span></div>
-            ${byCol[col.id].map(it=>renderBoardCard(it,u.id===state.user.uid)).join("")}
+            ${byCol[col.id].map(it=>renderBoardCard(it,canInteract)).join("")}
           </div>`).join("")}
         </div>
       </div>
     </div>`;
-  });
+  };
 
-  if(!people.length)html+=`<div class="card"><div class="card-b" style="text-align:center;color:var(--muted)">No hay personas para mostrar.</div></div>`;
+  if(role==="colaborador"){
+    const me=uById(state.user.uid);
+    if(me)html+=renderPersonBoard(me,true);
+    const others=data.users.filter(u=>u.role!=="supervisor"&&u.id!==state.user.uid);
+    if(others.length){
+      html+=`<div style="margin-top:18px;padding-top:14px;border-top:2px solid var(--line)">
+        <div style="font-size:13px;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:6px">👥 <b>Pizarra del equipo</b> — solo lectura</div>`;
+      others.forEach(u=>{html+=renderPersonBoard(u,false);});
+      html+=`</div>`;
+    }
+  } else {
+    let people=data.users.filter(u=>u.role!=="supervisor");
+    if(state.pizarraFocus!=="all")people=people.filter(u=>u.id===state.pizarraFocus);
+    const me=people.find(u=>u.id===state.user.uid);
+    const rest=people.filter(u=>u.id!==state.user.uid);
+    const ordered=me?[me,...rest]:rest;
+
+    html+=`<div class="filterbar">
+      <select onchange="state.pizarraFocus=this.value;render()" style="width:auto;min-width:200px">
+        <option value="all" ${state.pizarraFocus==="all"?"selected":""}>Ver a todos</option>
+        ${data.users.filter(u=>u.role!=="supervisor").map(u=>`<option value="${u.id}" ${state.pizarraFocus===u.id?"selected":""}>${esc(u.name)}</option>`).join("")}
+      </select>
+    </div>`;
+    ordered.forEach(u=>{html+=renderPersonBoard(u,true);});
+  }
 
   if(role==="jefe"||role==="supervisor"){
     const note=data.dayNotes.find(n=>n.date===todayI);
@@ -636,10 +645,13 @@ function renderBoardCard(it,canDrag){
   const p=it.projectId?pById(it.projectId):null;
   const tagLabels={plan:"Planificada",extra:"Extra",obs:"Observación",bloq:"Bloqueado"};
   const tag=it.tag||"plan";
+  const pct=it.col==="done"?100:(it.pct||0);
+  const pctColor=pct>=80?"var(--green)":pct>=40?"var(--amber)":"var(--muted)";
   return `<div class="bcard" draggable="${canDrag}" ondragstart="state.dragging='${it.id}';this.classList.add('drag')" ondragend="this.classList.remove('drag');state.dragging=null" onclick="openBoardItem('${it.id}','${it.userId}','${it.date}')">
-    <span class="ktag ${tag}">${tagLabels[tag]||"Plan"}</span>
+    <div style="display:flex;align-items:center;gap:6px"><span class="ktag ${tag}">${tagLabels[tag]||"Plan"}</span>${it.col!=="todo"?`<span style="margin-left:auto;font-family:var(--mono);font-size:12px;font-weight:700;color:${pctColor}">${pct}%</span>`:""}</div>
     <div class="ktitle">${esc(it.text)}</div>
-    <div class="kmeta">${p?`<span class="codetag" style="background:var(--ink2);padding:1px 5px">${esc(p.code)}</span>`:""}${it.hours?`⏱️ ${it.hours}h`:""}${it.link?` 🔗`:""}</div>
+    ${it.col!=="todo"?`<div class="devbar" style="height:4px;margin:2px 0 4px"><div class="fill" style="width:${pct}%;background:${pctColor}"></div></div>`:""}
+    <div class="kmeta">${p?`<span class="codetag" style="background:var(--ink2);padding:1px 5px">${esc(p.code)}</span>`:""}${it.link?` 🔗`:""}</div>
   </div>`;
 }
 
@@ -657,6 +669,7 @@ function openBoardItem(id,userId,date,askDone){
   const isOwner=it?it.userId===state.user.uid:userId===state.user.uid;
   const canEdit=isOwner||role==="jefe";
   const projOpts=data.projects.filter(p=>p.status!=="cerrado").map(p=>`<option value="${p.id}" ${it?.projectId===p.id?"selected":""}>${esc(p.code)} · ${esc(p.name)}</option>`).join("");
+  const curPct=it?.col==="done"?100:(it?.pct||0);
   document.getElementById("modal").innerHTML=`<div class="modal"><div class="modal-c">
     <div class="modal-h"><h3>${it?"Tarjeta":"Nueva tarea"}</h3>${it?`<span class="codetag">${esc((uById(it.userId)||{}).name||"")}</span>`:""}<button class="x" onclick="closeModal()">✕</button></div>
     <div class="modal-b">
@@ -670,19 +683,20 @@ function openBoardItem(id,userId,date,askDone){
           <option value="bloq" ${it?.tag==="bloq"?"selected":""}>Bloqueado</option>
         </select></label>
       </div>
-      ${askDone||it?.col==="done"||(it&&it.hours)?`<div class="grid g2">
-        <label class="fl"><span class="t">⏱️ Horas trabajadas</span><input type="number" id="bi-hours" step="0.5" min="0" max="14" value="${it?.hours||""}" ${!canEdit?"readonly":""}/></label>
-        <label class="fl"><span class="t">⏱️ Horas trabajadas</span><input type="number" id="bi-hours" step="0.5" min="0" max="14" value="${it?.hours||""}" ${!canEdit?"readonly":""}/></label>
-        <label class="fl"><span class="t">🔗 Link al trabajo (Drive, etc.)</span><input id="bi-link" value="${esc(it?.link||"")}" ${!canEdit?"readonly":""}/></label>
-      </div>`:`<label class="fl"><span class="t">🔗 Link (opcional)</span><input id="bi-link" value="${esc(it?.link||"")}" ${!canEdit?"readonly":""}/></label>`}
+      ${it||askDone?`<div style="margin:4px 0 12px">
+        <label class="t" style="display:block;font-size:12px;font-weight:500;color:#475569;margin-bottom:4px">📊 Avance de esta tarea: <span id="bi-pct-lbl" style="font-family:var(--mono);font-weight:700">${curPct}%</span></label>
+        <input type="range" id="bi-pct" min="0" max="100" step="5" value="${curPct}" ${!canEdit?"disabled":""} oninput="document.getElementById('bi-pct-lbl').textContent=this.value+'%'" style="width:100%;accent-color:var(--accent)"/>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted)"><span>0%</span><span>50%</span><span>100%</span></div>
+      </div>`:""}
+      <label class="fl"><span class="t">🔗 Link al trabajo (opcional)</span><input id="bi-link" value="${esc(it?.link||"")}" ${!canEdit?"readonly":""}/></label>
       ${it?`<div style="margin-top:10px;border-top:1px solid var(--line);padding-top:10px">
         <b style="font-size:12px;color:var(--muted);text-transform:uppercase">Comentarios</b>
         <div style="margin-top:6px">${commentThread(cFor("board_"+it.id))}</div>
-        ${(role==="jefe"||role==="supervisor")?`<div style="display:flex;gap:8px;margin-top:8px"><input id="bi-comment" placeholder="Deja tu observación..."/><button class="btn dark sm" onclick="sendBoardComment('${it.id}')">Enviar</button></div>`:""}
+        ${(role==="jefe"||role==="supervisor"||isOwner)?`<div style="display:flex;gap:8px;margin-top:8px"><input id="bi-comment" placeholder="${role==="colaborador"?"¿Algún bloqueo?":"Deja tu observación..."}"/><button class="btn dark sm" onclick="sendBoardComment('${it.id}')">Enviar</button></div>`:""}
       </div>`:""}
     </div>
     <div class="modal-f">
-      ${it&&canEdit?`<button class="btn line" onclick="moveBoardItem('${it.id}','todo')">📋 A "Por hacer"</button><button class="btn line" onclick="moveBoardItem('${it.id}','doing')">🔨 A "Haciendo"</button><button class="btn primary" onclick="moveBoardItem('${it.id}','done')">✅ Marcar hecho</button>`:""}
+      ${it&&canEdit?`<button class="btn line" onclick="moveBoardItem('${it.id}','todo')">📋 Por hacer</button><button class="btn line" onclick="moveBoardItem('${it.id}','doing')">🔨 Haciendo</button><button class="btn primary" onclick="moveBoardItem('${it.id}','done')">✅ Hecho</button>`:""}
       ${canEdit?`<button class="btn dark" onclick="saveBoardItem('${id||""}','${userId}','${date}')">Guardar</button>`:""}
       ${it&&(isOwner||role==="jefe")?`<button class="btn line" onclick="deleteBoardItem('${it.id}')">${ICONS.trash}</button>`:""}
       <button class="btn line" onclick="closeModal()">Cerrar</button>
@@ -693,13 +707,13 @@ async function saveBoardItem(id,userId,date){
   const text=val("bi-text");if(!text)return alert("Escribe una descripción.");
   const projectId=document.getElementById("bi-proj").value||null;
   const tag=document.getElementById("bi-tag").value;
-  const hoursEl=document.getElementById("bi-hours");
-  const hours=hoursEl?Number(hoursEl.value)||0:0;
+  const pctEl=document.getElementById("bi-pct");
+  const pct=pctEl?Number(pctEl.value)||0:0;
   const link=val("bi-link");
   const u=uById(userId);
   try{
-    if(id)await fb.fs.collection("board_items").doc(id).update({text,projectId,tag,hours,link,updatedAt:new Date().toISOString()});
-    else await fb.fs.collection("board_items").add({userId,userName:u?.name||"",date,text,projectId,tag,hours,link,col:"todo",createdBy:state.profile.name,createdAt:new Date().toISOString()});
+    if(id)await fb.fs.collection("board_items").doc(id).update({text,projectId,tag,pct,link,updatedAt:new Date().toISOString()});
+    else await fb.fs.collection("board_items").add({userId,userName:u?.name||"",date,text,projectId,tag,pct,link,col:"todo",createdBy:state.profile.name,createdAt:new Date().toISOString()});
     addLog(`${id?"Editó":"Creó"} tarjeta de ${u?.name}: "${text.slice(0,40)}"`);
     closeModal();
   }catch(e){alert("Error: "+e.message);}
@@ -708,8 +722,10 @@ async function moveBoardItem(id,col){
   const it=data.boardItems.find(x=>x.id===id);if(!it)return;
   try{
     const payload={col,updatedAt:new Date().toISOString()};
+    if(col==="done")payload.pct=100;
     const text=document.getElementById("bi-text");if(text)payload.text=text.value.trim();
     const link=document.getElementById("bi-link");if(link)payload.link=link.value.trim();
+    const pctEl=document.getElementById("bi-pct");if(pctEl&&col!=="done")payload.pct=Number(pctEl.value)||0;
     await fb.fs.collection("board_items").doc(id).update(payload);closeModal();
   }catch(e){alert("Error: "+e.message);}
 }
