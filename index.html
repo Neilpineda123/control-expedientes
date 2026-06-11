@@ -306,6 +306,15 @@ function isHoliday(iso){return data.holidays.some(h=>h.date===iso);}
 function dayLabel(d){return ["DOM","LUN","MAR","MIÉ","JUE","VIE","SÁB"][d.getDay()];}
 function dailyCapacity(iso){const d=new Date(iso+"T00:00:00");const day=d.getDay();if(day===0)return 0;if(day===6)return 4.5;return 8;}
 function weeklyCapacity(){return 8*5+4.5;}
+function previousWorkDay(iso){
+  let d=new Date(iso+"T00:00:00");
+  for(let i=0;i<14;i++){
+    d.setDate(d.getDate()-1);
+    const c=isoOfDate(d);
+    if(d.getDay()!==0&&!isHoliday(c))return c;
+  }
+  return null;
+}
 
 window.addEventListener("DOMContentLoaded",()=>{
   if(!isConfigured()){document.getElementById("app").innerHTML='<div style="padding:30px;text-align:center"><p>Configuración pendiente.</p></div>';return;}
@@ -569,6 +578,25 @@ function renderPizarraHoy(role){
   let html="";
   if(fer)html+=`<div class="alert warn" style="margin-bottom:14px">📅 Hoy está marcado como <b>feriado</b>. Igual puedes registrar si trabajaste.</div>`;
 
+  // Aviso de tarjetas pendientes del día hábil anterior (solo para mí)
+  const prevDay=previousWorkDay(todayI);
+  if(prevDay){
+    const pending=data.boardItems.filter(b=>b.userId===state.user.uid&&b.date===prevDay&&b.col!=="done"&&!b.discarded&&!b.carriedOver);
+    if(pending.length){
+      html+=`<div class="card" style="margin-bottom:14px;border-color:#fde68a">
+        <div class="card-h" style="background:#fffbeb">📌 Tienes ${pending.length} tarea${pending.length>1?"s":""} sin terminar de ${fmtDate(prevDay)}</div>
+        <div class="card-b">
+          ${pending.map(it=>{const colLbl={todo:"📋 Por hacer",doing:"🔨 Haciendo"}[it.col]||it.col;return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px">
+            <span style="flex:1">${esc(it.text)} <span style="color:var(--muted);font-size:11px">(${colLbl}${it.pct?` · ${it.pct}%`:""})</span></span>
+            <button class="btn line sm" onclick="continuePending('${it.id}','${todayI}')">Continuar hoy</button>
+            <button class="btn line sm" onclick="discardPending('${it.id}')">Descartar</button>
+          </div>`;}).join("")}
+          <button class="btn primary sm" style="margin-top:10px" onclick="continueAllPending('${prevDay}','${todayI}')">Continuar todas hoy</button>
+        </div>
+      </div>`;
+    }
+  }
+
   const renderPersonBoard=(u,canInteract)=>{
     const items=data.boardItems.filter(b=>b.userId===u.id&&b.date===todayI);
     const byCol={};BOARD_COLS.forEach(c=>byCol[c.id]=[]);
@@ -732,6 +760,27 @@ async function moveBoardItem(id,col){
 async function deleteBoardItem(id){
   if(!confirm("¿Eliminar esta tarjeta?"))return;
   try{await fb.fs.collection("board_items").doc(id).delete();closeModal();}catch(e){alert("Error: "+e.message);}
+}
+async function continuePending(itemId,todayI){
+  const it=data.boardItems.find(x=>x.id===itemId);if(!it)return;
+  try{
+    await fb.fs.collection("board_items").add({
+      userId:it.userId,userName:it.userName||"",date:todayI,text:it.text,projectId:it.projectId||null,
+      tag:it.tag||"plan",pct:it.pct||0,link:it.link||"",col:it.col==="doing"?"doing":"todo",
+      continuedFrom:it.id,createdBy:state.profile.name,createdAt:new Date().toISOString()
+    });
+    await fb.fs.collection("board_items").doc(it.id).update({carriedOver:true,updatedAt:new Date().toISOString()});
+    addLog(`Continuó hoy: "${it.text.slice(0,40)}"`);
+    render();
+  }catch(e){alert("Error: "+e.message);}
+}
+async function continueAllPending(prevDay,todayI){
+  const pending=data.boardItems.filter(b=>b.userId===state.user.uid&&b.date===prevDay&&b.col!=="done");
+  for(const it of pending){await continuePending(it.id,todayI);}
+}
+async function discardPending(itemId){
+  if(!confirm("¿Descartar esta tarea pendiente? Quedará registrada como no completada ese día."))return;
+  try{await fb.fs.collection("board_items").doc(itemId).update({discarded:true,updatedAt:new Date().toISOString()});addLog("Descartó una tarea pendiente del día anterior");render();}catch(e){alert("Error: "+e.message);}
 }
 async function sendBoardComment(id){
   const v=val("bi-comment");if(!v)return;
@@ -908,7 +957,9 @@ function viewDesempeno(){
     const blocked=items.filter(b=>b.tag==="bloq").length;
     const tasksAssigned=data.tasks.filter(t=>t.assigneeId===u.id);
     const avgProgress=tasksAssigned.length?Math.round(tasksAssigned.reduce((a,t)=>a+(t.pctReal||0),0)/tasksAssigned.length):0;
-    return {items,daysWorked,autoHours,totalItems,doneItems,planned:planned.length,plannedDone,extras,blocked,tasksAssigned:tasksAssigned.length,avgProgress,
+    const weightedSum=items.reduce((a,b)=>a+(b.col==="done"?100:(b.pct||0)),0);
+    const avanceAcumPct=totalItems?Math.round(weightedSum/totalItems):0;
+    return {items,daysWorked,autoHours,totalItems,doneItems,planned:planned.length,plannedDone,extras,blocked,tasksAssigned:tasksAssigned.length,avgProgress,avanceAcumPct,
       asistPct:workDays?Math.round(daysWorked/workDays*100):0,
       cumplPct:planned.length?Math.round(plannedDone/planned.length*100):0,
       donePct:totalItems?Math.round(doneItems/totalItems*100):0,
@@ -925,7 +976,7 @@ function viewDesempeno(){
       const u=s.user;
       html+=`<div class="card"><div class="card-h"><div class="avatar sm">${initials(u.name)}</div>${esc(u.name)} <span class="role ${u.role}" style="margin-left:auto">${ROLE_LABEL[u.role]}</span></div>
         <div class="card-b">
-          <div class="grid g3" style="gap:8px">
+          <div class="grid g4" style="gap:8px">
             <div style="padding:10px;background:#f8fafc;border-radius:8px">
               <div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:4px">Asistencia</div>
               <div style="font-family:var(--mono);font-size:20px;font-weight:700;color:${barColor(s.asistPct)}">${s.asistPct}%</div>
@@ -943,6 +994,12 @@ function viewDesempeno(){
               <div style="font-family:var(--mono);font-size:20px;font-weight:700;color:${barColor(s.donePct)}">${s.donePct}%</div>
               ${bar(s.donePct)}
               <div style="font-size:10px;color:var(--muted);margin-top:4px">${s.doneItems} de ${s.totalItems} tarjetas</div>
+            </div>
+            <div style="padding:10px;background:#f8fafc;border-radius:8px">
+              <div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:4px">Avance acum.</div>
+              <div style="font-family:var(--mono);font-size:20px;font-weight:700;color:${barColor(s.avanceAcumPct)}">${s.avanceAcumPct}%</div>
+              ${bar(s.avanceAcumPct)}
+              <div style="font-size:10px;color:var(--muted);margin-top:4px">incluye % en curso</div>
             </div>
           </div>
           <div style="margin-top:10px;display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center">
@@ -967,15 +1024,15 @@ function viewDesempeno(){
     <div class="grid g2">
       <div class="card"><div class="card-h">📊 Tarjetas completadas por persona</div><div class="card-b"><div style="height:260px"><canvas id="chPerf3"></canvas></div></div></div>
       <div class="card"><div class="card-h">📊 Ranking de rendimiento global</div><div class="card-b">
-        <table><thead><tr><th>#</th><th>Persona</th><th>Asist.</th><th>Cumpl.</th><th>Horas</th><th>Prod.</th><th>Puntaje</th></tr></thead><tbody>
-        ${allStats.sort((a,b)=>((b.asistPct+b.cumplPct+b.hoursPct+b.donePct)/4)-((a.asistPct+a.cumplPct+a.hoursPct+a.donePct)/4)).map((s,i)=>{
-          const score=Math.round((s.asistPct+s.cumplPct+s.hoursPct+s.donePct)/4);
+        <table><thead><tr><th>#</th><th>Persona</th><th>Asist.</th><th>Cumpl.</th><th>Horas</th><th>Avance</th><th>Puntaje</th></tr></thead><tbody>
+        ${allStats.sort((a,b)=>((b.asistPct+b.cumplPct+b.hoursPct+b.avanceAcumPct)/4)-((a.asistPct+a.cumplPct+a.hoursPct+a.avanceAcumPct)/4)).map((s,i)=>{
+          const score=Math.round((s.asistPct+s.cumplPct+s.hoursPct+s.avanceAcumPct)/4);
           const medal=i===0?"🥇":i===1?"🥈":i===2?"🥉":"";
           return `<tr><td>${medal||i+1}</td><td><b>${esc(s.user.name)}</b></td>
             <td class="num" style="color:${barColor(s.asistPct)}">${s.asistPct}%</td>
             <td class="num" style="color:${barColor(s.cumplPct)}">${s.cumplPct}%</td>
             <td class="num" style="color:${barColor(s.hoursPct)}">${s.hoursPct}%</td>
-            <td class="num" style="color:${barColor(s.donePct)}">${s.donePct}%</td>
+            <td class="num" style="color:${barColor(s.avanceAcumPct)}">${s.avanceAcumPct}%</td>
             <td class="num" style="font-weight:700;color:${barColor(score)}">${score}%</td></tr>`;
         }).join("")}
         </tbody></table>
