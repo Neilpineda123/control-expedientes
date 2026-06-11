@@ -253,7 +253,7 @@ const PROJ_STATUS = {
 const BOARD_COLS = [
   {id:"todo",name:"Por hacer",emoji:"📋"},
   {id:"doing",name:"Haciendo",emoji:"🔨"},
-  {id:"done",name:"Hecho",emoji:"✅"}
+  {id:"done",name:"Completado",emoji:"✅"}
 ];
 
 const STATUS={verde:{lbl:"En meta",cls:"v",hex:"#10b981"},amarillo:{lbl:"En riesgo",cls:"a",hex:"#f59e0b"},rojo:{lbl:"Crítico",cls:"r",hex:"#ef4444"}};
@@ -700,8 +700,10 @@ function openBoardItem(id,userId,date,askDone){
   const canEdit=isOwner||role==="jefe";
   const projOpts=data.projects.filter(p=>p.status!=="cerrado").map(p=>`<option value="${p.id}" ${it?.projectId===p.id?"selected":""}>${esc(p.code)} · ${esc(p.name)}</option>`).join("");
   const curPct=it?.col==="done"?100:(it?.pct||0);
+  const curCol=it?.col||"todo";
+  const colLabels={todo:"📋 Por hacer",doing:"🔨 Haciendo",done:"✅ Completado"};
   document.getElementById("modal").innerHTML=`<div class="modal"><div class="modal-c">
-    <div class="modal-h"><h3>${it?"Tarjeta":"Nueva tarea"}</h3>${it?`<span class="codetag">${esc((uById(it.userId)||{}).name||"")}</span>`:""}<button class="x" onclick="closeModal()">✕</button></div>
+    <div class="modal-h"><h3>${it?"Tarjeta":"Nueva tarea"}</h3>${it?`<span class="codetag">${esc((uById(it.userId)||{}).name||"")}</span>`:""}${it?`<span class="chip ${curCol==="done"?"v":curCol==="doing"?"a":"g"}" style="margin-left:6px">${colLabels[curCol]}</span>`:""}<button class="x" onclick="closeModal()">✕</button></div>
     <div class="modal-b">
       <label class="fl"><span class="t">¿Qué hay que hacer / qué hiciste?</span><textarea id="bi-text" rows="2" ${!canEdit?"readonly":""}>${esc(it?.text||"")}</textarea></label>
       <div class="grid g2">
@@ -715,10 +717,18 @@ function openBoardItem(id,userId,date,askDone){
       </div>
       ${it||askDone?`<div style="margin:4px 0 12px">
         <label class="t" style="display:block;font-size:12px;font-weight:500;color:#475569;margin-bottom:4px">📊 Avance de esta tarea: <span id="bi-pct-lbl" style="font-family:var(--mono);font-weight:700">${curPct}%</span></label>
-        <input type="range" id="bi-pct" min="0" max="100" step="5" value="${curPct}" ${!canEdit?"disabled":""} oninput="document.getElementById('bi-pct-lbl').textContent=this.value+'%'" style="width:100%;accent-color:var(--accent)"/>
+        <input type="range" id="bi-pct" min="0" max="100" step="5" value="${curPct}" ${!canEdit||curCol==="done"?"disabled":""} oninput="document.getElementById('bi-pct-lbl').textContent=this.value+'%';document.getElementById('bi-pct-fill').style.width=this.value+'%'" style="width:100%;accent-color:var(--accent)"/>
         <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted)"><span>0%</span><span>50%</span><span>100%</span></div>
+        <div class="devbar" style="height:4px;margin-top:6px"><div id="bi-pct-fill" class="fill" style="width:${curPct}%;background:var(--accent)"></div></div>
       </div>`:""}
       <label class="fl"><span class="t">🔗 Link al trabajo (opcional)</span><input id="bi-link" value="${esc(it?.link||"")}" ${!canEdit?"readonly":""}/></label>
+      ${it&&canEdit?`<div style="margin:4px 0 12px">
+        <label class="t" style="display:block;font-size:12px;font-weight:500;color:#475569;margin-bottom:4px">Mover a columna</label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn ${curCol==="todo"?"dark":"line"} sm" onclick="moveBoardItem('${it.id}','todo')">📋 Por hacer</button>
+          <button class="btn ${curCol==="doing"?"dark":"line"} sm" onclick="moveBoardItem('${it.id}','doing')">🔨 Haciendo</button>
+        </div>
+      </div>`:""}
       ${it?`<div style="margin-top:10px;border-top:1px solid var(--line);padding-top:10px">
         <b style="font-size:12px;color:var(--muted);text-transform:uppercase">Comentarios</b>
         <div style="margin-top:6px">${commentThread(cFor("board_"+it.id))}</div>
@@ -726,10 +736,11 @@ function openBoardItem(id,userId,date,askDone){
       </div>`:""}
     </div>
     <div class="modal-f">
-      ${it&&canEdit?`<button class="btn line" onclick="moveBoardItem('${it.id}','todo')">📋 Por hacer</button><button class="btn line" onclick="moveBoardItem('${it.id}','doing')">🔨 Haciendo</button><button class="btn primary" onclick="moveBoardItem('${it.id}','done')">✅ Hecho</button>`:""}
-      ${canEdit?`<button class="btn dark" onclick="saveBoardItem('${id||""}','${userId}','${date}')">Guardar</button>`:""}
       ${it&&(isOwner||role==="jefe")?`<button class="btn line" onclick="deleteBoardItem('${it.id}')">${ICONS.trash}</button>`:""}
       <button class="btn line" onclick="closeModal()">Cerrar</button>
+      ${canEdit?`<button class="btn dark" onclick="saveBoardItem('${id||""}','${userId}','${date}')">Guardar</button>`:""}
+      ${it&&canEdit&&curCol!=="done"?`<button class="btn primary" style="background:var(--green);font-weight:700" onclick="moveBoardItem('${it.id}','done')">✅ Marcar como Completada</button>`:""}
+      ${it&&canEdit&&curCol==="done"?`<button class="btn line" onclick="moveBoardItem('${it.id}','doing')">↩️ Reabrir tarea</button>`:""}
     </div>
   </div></div>`;
 }
@@ -753,10 +764,13 @@ async function moveBoardItem(id,col){
   try{
     const payload={col,updatedAt:new Date().toISOString()};
     if(col==="done")payload.pct=100;
+    else if(it.col==="done"&&col==="doing")payload.pct=90;
     const text=document.getElementById("bi-text");if(text)payload.text=text.value.trim();
     const link=document.getElementById("bi-link");if(link)payload.link=link.value.trim();
-    const pctEl=document.getElementById("bi-pct");if(pctEl&&col!=="done")payload.pct=Number(pctEl.value)||0;
-    await fb.fs.collection("board_items").doc(id).update(payload);closeModal();
+    const pctEl=document.getElementById("bi-pct");if(pctEl&&col!=="done"&&it.col!=="done")payload.pct=Number(pctEl.value)||0;
+    await fb.fs.collection("board_items").doc(id).update(payload);
+    addLog(`${col==="done"?"Completó":col==="doing"&&it.col==="done"?"Reabrió":"Movió"} la tarea "${(it.text||"").slice(0,40)}"`);
+    closeModal();
   }catch(e){alert("Error: "+e.message);}
 }
 async function deleteBoardItem(id){
@@ -813,7 +827,7 @@ function renderResumenSemanal(role){
   users.forEach(u=>{
     const isMe=u.id===state.user.uid;
     html+=`<div class="wname" style="${isMe?"background:#eff6ff;font-weight:600":""}"><div class="avatar sm">${initials(u.name)}</div>${esc(u.name)}${isMe?" (tú)":""}</div>`;
-    let weekDone=0,weekTotal=0,weekAutoHours=0;
+    let weekDone=0,weekTotal=0,weekAutoHours=0,weekWeighted=0;
     days.forEach(d=>{
       const iso=isoOfDate(d);
       const fer=isHoliday(iso);
@@ -824,28 +838,29 @@ function renderResumenSemanal(role){
       const dayCap=dailyCapacity(iso);
       const dayWorked=done>0;
       if(dayWorked&&!fer)weekAutoHours+=dayCap;
-      weekDone+=done;weekTotal+=total;
+      const dayWeightedSum=items.reduce((a,b)=>a+(b.col==="done"?100:(b.pct||0)),0);
+      const dayPct=total?Math.round(dayWeightedSum/total):0;
+      weekDone+=done;weekTotal+=total;weekWeighted+=dayWeightedSum;
       let content="";
       if(fer){content=`<span style="color:#dc2626;font-size:10px">Feriado</span>`;}
       else if(total===0){content=`<span style="color:var(--muted);font-size:10px">—</span>`;}
       else{
-        const pct=Math.round(done/total*100);
-        const color=pct===100?"var(--green)":pct>=50?"var(--amber)":"var(--red)";
-        content=`<div style="font-family:var(--mono);font-size:16px;font-weight:700;color:${color}">${pct}%</div>
-          <div class="devbar" style="height:4px;margin:3px 6px 0"><div class="fill" style="width:${pct}%;background:${color}"></div></div>
-          <div style="font-size:9px;color:var(--muted);margin-top:2px">${done}/${total} tareas</div>
+        const color=dayPct===100?"var(--green)":dayPct>=50?"var(--amber)":"var(--red)";
+        content=`<div style="font-family:var(--mono);font-size:16px;font-weight:700;color:${color}">${dayPct}%</div>
+          <div class="devbar" style="height:4px;margin:3px 6px 0"><div class="fill" style="width:${dayPct}%;background:${color}"></div></div>
+          <div style="font-size:9px;color:var(--muted);margin-top:2px">${done}/${total} completadas</div>
           ${dayWorked?`<div style="font-size:9px;color:var(--green);font-weight:600;margin-top:1px">✅ ${dayCap}h</div>`:`<div style="font-size:9px;color:var(--amber);margin-top:1px">⏳ pendiente</div>`}`;
       }
       html+=`<div class="weekcell" style="${fer?"background:#fef9f9":isToday?"background:#eff6ff":""};padding:6px" onclick="openDaySummary('${u.id}','${iso}')">${content}</div>`;
     });
-    const weekPct=weekTotal?Math.round(weekDone/weekTotal*100):0;
+    const weekPct=weekTotal?Math.round(weekWeighted/weekTotal):0;
     const wColor=weekPct>=80?"var(--green)":weekPct>=50?"var(--amber)":weekTotal===0?"var(--muted)":"var(--red)";
     const wCap=weeklyCapacity();
     const hoursPct=wCap?Math.round(weekAutoHours/wCap*100):0;
     const hColor=hoursPct>=80?"var(--green)":hoursPct>=50?"var(--amber)":"var(--muted)";
     html+=`<div class="weekcell" style="background:#f0fdf4;padding:6px;border-left:2px solid var(--green)">
       <div style="font-family:var(--mono);font-size:16px;font-weight:700;color:${wColor}">${weekTotal?weekPct+"%":"—"}</div>
-      <div style="font-size:9px;color:var(--muted);margin-top:2px">${weekDone}/${weekTotal} tareas</div>
+      <div style="font-size:9px;color:var(--muted);margin-top:2px">${weekDone}/${weekTotal} completadas</div>
       <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:${hColor};margin-top:3px">${weekAutoHours}h / ${wCap}h</div>
       <div class="devbar" style="height:4px;margin:2px 0 0"><div class="fill" style="width:${hoursPct}%;background:${hColor}"></div></div>
     </div>`;
@@ -861,7 +876,7 @@ function openDaySummary(userId,iso){
   document.getElementById("modal").innerHTML=`<div class="modal"><div class="modal-c">
     <div class="modal-h"><h3>${esc(u?.name||"")} · ${iso.split("-").reverse().join("/")}</h3>${fer?'<span class="chip r">Feriado</span>':""}<button class="x" onclick="closeModal()">✕</button></div>
     <div class="modal-b">
-      ${items.length?items.map(it=>{const p=it.projectId?pById(it.projectId):null;const colLbl={todo:"📋 Por hacer",doing:"🔨 Haciendo",done:"✅ Hecho"}[it.col]||it.col;return `<div style="padding:8px 0;border-bottom:1px solid var(--line)"><b>${esc(it.text)}</b><div style="font-size:12px;color:var(--muted);margin-top:2px">${colLbl}${p?` · ${esc(p.code)}`:""}${it.hours?` · ${it.hours}h`:""}${it.link?` · <a href="${esc(it.link)}" target="_blank">link</a>`:""}</div></div>`;}).join(""):'<p style="color:var(--muted)">Sin tarjetas ese día.</p>'}
+      ${items.length?items.map(it=>{const p=it.projectId?pById(it.projectId):null;const colLbl={todo:"📋 Por hacer",doing:"🔨 Haciendo",done:"✅ Completado"}[it.col]||it.col;const pct=it.col==="done"?100:(it.pct||0);return `<div style="padding:8px 0;border-bottom:1px solid var(--line)"><b>${esc(it.text)}</b><div style="font-size:12px;color:var(--muted);margin-top:2px">${colLbl}${it.col!=="todo"?` · ${pct}%`:""}${p?` · ${esc(p.code)}`:""}${it.link?` · <a href="${esc(it.link)}" target="_blank">link</a>`:""}</div></div>`;}).join(""):'<p style="color:var(--muted)">Sin tarjetas ese día.</p>'}
     </div>
     <div class="modal-f"><button class="btn line" onclick="closeModal()">Cerrar</button></div>
   </div></div>`;
@@ -918,7 +933,7 @@ function openCalDay(iso){
       ${role==="jefe"?`<div style="margin-bottom:14px">
         ${fer?`<button class="btn line sm" onclick="removeHoliday('${ferObj.id}')">Quitar feriado</button>${ferObj.name?`<span style="margin-left:10px;color:var(--muted)">${esc(ferObj.name)}</span>`:""}`:`<button class="btn warn sm" onclick="addHoliday('${iso}')">🔴 Marcar feriado</button>`}
       </div>`:""}
-      ${Object.keys(byUser).length?Object.entries(byUser).map(([uid,its])=>{const u=uById(uid);return `<div style="margin-bottom:10px"><b style="font-size:13px">${esc(u?.name||"")}</b>${its.map(it=>{const p=it.projectId?pById(it.projectId):null;const colLbl={todo:"📋",doing:"🔨",done:"✅"}[it.col]||"";return `<div style="padding:4px 0;font-size:13px;color:var(--muted)">${colLbl} ${esc(it.text)}${p?` · ${esc(p.code)}`:""}${it.hours?` · ${it.hours}h`:""}</div>`;}).join("")}</div>`;}).join(""):'<p style="color:var(--muted);font-size:13px">Sin registros ese día.</p>'}
+      ${Object.keys(byUser).length?Object.entries(byUser).map(([uid,its])=>{const u=uById(uid);return `<div style="margin-bottom:10px"><b style="font-size:13px">${esc(u?.name||"")}</b>${its.map(it=>{const p=it.projectId?pById(it.projectId):null;const colLbl={todo:"📋",doing:"🔨",done:"✅"}[it.col]||"";const pct=it.col==="done"?100:(it.pct||0);return `<div style="padding:4px 0;font-size:13px;color:var(--muted)">${colLbl} ${esc(it.text)}${it.col!=="todo"?` · ${pct}%`:""}${p?` · ${esc(p.code)}`:""}</div>`;}).join("")}</div>`;}).join(""):'<p style="color:var(--muted);font-size:13px">Sin registros ese día.</p>'}
     </div>
     <div class="modal-f"><button class="btn line" onclick="closeModal()">Cerrar</button></div>
   </div></div>`;
