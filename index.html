@@ -139,7 +139,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#60a5fa;box-sh
 .cal-d .dn{font-weight:600;color:var(--ink2)}
 .cal-d .dl{font-family:var(--mono);font-size:9px;color:var(--green)}
 .cal-d.nolog .dl{color:var(--red)}
-.weekgrid{display:grid;grid-template-columns:140px repeat(6,1fr);gap:1px;background:var(--line);font-size:12px;border-radius:8px;overflow:hidden}
+.weekgrid{display:grid;grid-template-columns:140px repeat(6,1fr) 90px;gap:1px;background:var(--line);font-size:12px;border-radius:8px;overflow:hidden}
 .weekgrid>div{background:#fff;padding:8px}
 .weekgrid .wh{font-weight:600;color:var(--muted);text-transform:uppercase;font-size:10px;letter-spacing:.04em;background:#f8fafc;text-align:center}
 .weekgrid .wname{font-weight:500;color:var(--ink2);background:#f8fafc;display:flex;align-items:center;gap:6px}
@@ -163,7 +163,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#60a5fa;box-sh
 .diff.neg{color:var(--red)}.diff.pos{color:var(--green)}
 .obscheck{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:13px}
 .obscheck input{width:auto}
-@media(max-width:820px){.layout{flex-direction:column}.sb{display:none}.topbar{display:block}.content{padding:16px}.tnav{display:flex;gap:8px;overflow-x:auto;padding-top:10px}.tnav button{flex:0 0 auto;background:#1e293b;color:#cbd5e1;border-radius:999px;padding:7px 13px;font-size:13px;display:inline-flex;align-items:center;gap:6px}.tnav button.active{background:var(--accent);color:#fff}.tnav svg{width:15px;height:15px}.board{grid-template-columns:1fr}.weekgrid{grid-template-columns:100px repeat(6,1fr);overflow-x:auto;font-size:11px}}
+@media(max-width:820px){.layout{flex-direction:column}.sb{display:none}.topbar{display:block}.content{padding:16px}.tnav{display:flex;gap:8px;overflow-x:auto;padding-top:10px}.tnav button{flex:0 0 auto;background:#1e293b;color:#cbd5e1;border-radius:999px;padding:7px 13px;font-size:13px;display:inline-flex;align-items:center;gap:6px}.tnav button.active{background:var(--accent);color:#fff}.tnav svg{width:15px;height:15px}.board{grid-template-columns:1fr}.weekgrid{grid-template-columns:100px repeat(6,1fr) 80px;overflow-x:auto;font-size:11px}}
 </style>
 </head>
 <body>
@@ -258,7 +258,7 @@ const STATUS={verde:{lbl:"En meta",cls:"v",hex:"#10b981"},amarillo:{lbl:"En ries
 const ROLE_LABEL={jefe:"Jefe de Proyecto",colaborador:"Colaborador",supervisor:"Supervisor"};
 const NAV={
   jefe:[["resumen","Resumen","dash"],["proyectos","Proyectos","build"],["pizarra","Pizarra","board"],["calendario","Calendario","cal"],["desempeno","Desempeño","perf"],["equipo","Equipo","users"],["bitacora","Bitácora","hist"]],
-  supervisor:[["resumen","Resumen","dash"],["proyectos","Proyectos","build"],["pizarra","Pizarra","board"],["calendario","Calendario","cal"],["desempeno","Desempeño","perf"],["bitacora","Bitácora","hist"]],
+  supervisor:[["resumen","Resumen","dash"],["proyectos","Proyectos","build"],["pizarra","Pizarra","board"],["calendario","Calendario","cal"],["desempeno","Desempeño","perf"]],
   colaborador:[["resumen","Resumen","dash"],["proyectos","Proyectos","build"],["pizarra","Mi Pizarra","board"],["calendario","Calendario","cal"]]
 };
 const ICONS={
@@ -279,7 +279,7 @@ const ICONS={
 const fb={app:null,auth:null,fs:null};
 const state={user:null,profile:null,tab:"resumen",pendingName:null,charts:[],authMode:"login",
   projFilter:"activo",projSearch:"",
-  pizarraSubtab:"hoy",pizarraFocus:"all",
+  pizarraSubtab:"hoy",pizarraFocus:"all",desempenoTab:"personas",
   calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),
   dragging:null,_selTpl:null,_obsBaseProject:null,_obsCaps:[]};
 const data={projects:[],tasks:[],comments:[],logs:[],users:[],boardItems:[],holidays:[],dayNotes:[]};
@@ -304,6 +304,8 @@ function getWeekStart(off=0){const d=new Date();d.setDate(d.getDate()-((d.getDay
 function weekDays(start){const a=[];for(let i=0;i<6;i++){const d=new Date(start);d.setDate(d.getDate()+i);a.push(d);}return a;}
 function isHoliday(iso){return data.holidays.some(h=>h.date===iso);}
 function dayLabel(d){return ["DOM","LUN","MAR","MIÉ","JUE","VIE","SÁB"][d.getDay()];}
+function dailyCapacity(iso){const d=new Date(iso+"T00:00:00");const day=d.getDay();if(day===0)return 0;if(day===6)return 4.5;return 8;}
+function weeklyCapacity(){return 8*5+4.5;}
 
 window.addEventListener("DOMContentLoaded",()=>{
   if(!isConfigured()){document.getElementById("app").innerHTML='<div style="padding:30px;text-align:center"><p>Configuración pendiente.</p></div>';return;}
@@ -392,7 +394,7 @@ function render(){
   else if(state.tab==="calendario")v.innerHTML=viewCalendario();
   else if(state.tab==="desempeno")v.innerHTML=viewDesempeno();
   else if(state.tab==="equipo"&&role==="jefe")v.innerHTML=viewEquipo();
-  else if(state.tab==="bitacora")v.innerHTML=viewBitacora();
+  else if(state.tab==="bitacora"&&role==="jefe")v.innerHTML=viewBitacora();
   else{v.innerHTML=viewResumen();initCharts();}
 }
 
@@ -526,7 +528,7 @@ function renderProject(p,role){
         ${responsables.map(u=>`<span style="display:inline-flex;align-items:center;gap:5px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:3px 10px"><span class="avatar sm" style="background:var(--ink2)">${initials(u.name)}</span>${esc(u.name)} <span style="color:var(--muted);font-family:var(--mono);font-size:11px">${respMap[u.id]} ${respMap[u.id]>1?"frentes":"frente"}</span></span>`).join("")}
       </div></div>`:""}
     ${p.pauseReason&&p.status==="paralizado"?`<div style="padding:10px 16px;background:#fffbeb;border-bottom:1px solid var(--line);font-size:13px;color:#92400e"><b>Motivo de pausa:</b> ${esc(p.pauseReason)}</div>`:""}
-    ${p.driveLink?`<div style="padding:8px 16px;background:#eff6ff;border-bottom:1px solid var(--line);font-size:12px">${ICONS.link} <b>Drive del expediente:</b> <a href="${esc(p.driveLink)}" target="_blank" style="word-break:break-all">${esc(p.driveLink)}</a></div>`:""}
+    ${p.driveLink?`<div style="padding:8px 16px;background:#eff6ff;border-bottom:1px solid var(--line);font-size:12px">🔗 <b>Drive del expediente:</b> <a href="${esc(p.driveLink)}" target="_blank" style="word-break:break-all">${esc(p.driveLink)}</a></div>`:""}
     ${pt.length?`<div class="scroll"><table><thead><tr><th>Capítulo / Responsable</th><th>Esp.</th><th>Real</th><th>Desv.</th><th>Avance</th><th>Estado</th><th></th></tr></thead><tbody>
       ${pt.map(t=>rowTask(t,p.status==="cerrado"?100:esp)).join("")}
     </tbody></table></div>`:`<div class="card-b" style="text-align:center;color:var(--muted)"><p>Sin frentes registrados.</p>${role==="jefe"&&p.status!=="cerrado"?`<button class="btn line sm" data-act="addtask" data-id="${p.id}" style="margin-top:8px">+ Agregar frente</button>`:""}</div>`}
@@ -588,11 +590,21 @@ function renderPizarraHoy(role){
     const byCol={};BOARD_COLS.forEach(c=>byCol[c.id]=[]);
     items.forEach(it=>{(byCol[it.col]||byCol.todo).push(it);});
     const isMe=u.id===state.user.uid;
+    const hasDone=items.some(it=>it.col==="done");
+    const cap=dailyCapacity(todayI);
+    const capLabel=cap===4.5?"Sábado · 4.5h":"Jornada · 8h";
     html+=`<div class="persongroup">
       <div class="persongroup-h">
         <div class="avatar sm">${initials(u.name)}</div><b>${esc(u.name)}</b>
         ${u.id===state.user.uid?'<span class="role colaborador">tú</span>':""}
-        ${(role==="jefe"&&isMe)||(role!=="colaborador"&&u.id===state.user.uid)||isMe?`<button class="btn primary sm" style="margin-left:auto" onclick="openBoardItem(null,'${u.id}','${todayI}')">+ Agregar tarea</button>`:""}
+        <div style="margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          ${hasDone
+            ?`<span style="display:inline-flex;align-items:center;gap:5px;background:#d1fae5;color:#065f46;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:500">✅ ${capLabel} registrada</span>`
+            :items.length>0
+              ?`<span style="display:inline-flex;align-items:center;gap:5px;background:#fef3c7;color:#92400e;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:500">🔨 ${capLabel} · en progreso</span>`
+              :`<span style="display:inline-flex;align-items:center;gap:5px;background:#f1f5f9;color:var(--muted);padding:3px 10px;border-radius:999px;font-size:12px;font-weight:500">📋 ${capLabel} · sin actividad</span>`}
+          ${(role==="jefe"&&isMe)||(role!=="colaborador"&&u.id===state.user.uid)||isMe?`<button class="btn primary sm" onclick="openBoardItem(null,'${u.id}','${todayI}')">+ Agregar tarea</button>`:""}
+        </div>
       </div>
       <div class="persongroup-b">
         <div class="board">
@@ -627,20 +639,15 @@ function renderBoardCard(it,canDrag){
   return `<div class="bcard" draggable="${canDrag}" ondragstart="state.dragging='${it.id}';this.classList.add('drag')" ondragend="this.classList.remove('drag');state.dragging=null" onclick="openBoardItem('${it.id}','${it.userId}','${it.date}')">
     <span class="ktag ${tag}">${tagLabels[tag]||"Plan"}</span>
     <div class="ktitle">${esc(it.text)}</div>
-    <div class="kmeta">${p?`<span class="codetag" style="background:var(--ink2);padding:1px 5px">${esc(p.code)}</span>`:""}${it.hours?`${ICONS.hist} ${it.hours}h`:""}${it.link?`${ICONS.link}`:""}</div>
+    <div class="kmeta">${p?`<span class="codetag" style="background:var(--ink2);padding:1px 5px">${esc(p.code)}</span>`:""}${it.hours?`⏱️ ${it.hours}h`:""}${it.link?` 🔗`:""}</div>
   </div>`;
 }
 
 async function dropBoardItem(col,ownerId){
   if(!state.dragging)return;
   const it=data.boardItems.find(x=>x.id===state.dragging);if(!it){state.dragging=null;return;}
-  if(it.userId!==state.user.uid){alert("Solo el dueño de la tarjeta puede moverla.");state.dragging=null;return;}
-  const payload={col};
-  if(col==="done"&&!it.hours&&!it.askedExtra){
-    state.dragging=null;
-    return openBoardItem(it.id,it.userId,it.date,true);
-  }
-  try{await fb.fs.collection("board_items").doc(it.id).update(payload);}catch(e){alert("Error: "+e.message);}
+  if(it.userId!==state.user.uid&&state.profile.role!=="jefe"){alert("Solo el dueño o el jefe pueden mover esta tarjeta.");state.dragging=null;return;}
+  try{await fb.fs.collection("board_items").doc(it.id).update({col,updatedAt:new Date().toISOString()});}catch(e){alert("Error: "+e.message);}
   state.dragging=null;
 }
 
@@ -665,8 +672,9 @@ function openBoardItem(id,userId,date,askDone){
       </div>
       ${askDone||it?.col==="done"||(it&&it.hours)?`<div class="grid g2">
         <label class="fl"><span class="t">⏱️ Horas trabajadas</span><input type="number" id="bi-hours" step="0.5" min="0" max="14" value="${it?.hours||""}" ${!canEdit?"readonly":""}/></label>
-        <label class="fl"><span class="t">${ICONS.link} Link al trabajo (Drive, etc.)</span><input id="bi-link" value="${esc(it?.link||"")}" ${!canEdit?"readonly":""}/></label>
-      </div>`:`<label class="fl"><span class="t">${ICONS.link} Link (opcional)</span><input id="bi-link" value="${esc(it?.link||"")}" ${!canEdit?"readonly":""}/></label>`}
+        <label class="fl"><span class="t">⏱️ Horas trabajadas</span><input type="number" id="bi-hours" step="0.5" min="0" max="14" value="${it?.hours||""}" ${!canEdit?"readonly":""}/></label>
+        <label class="fl"><span class="t">🔗 Link al trabajo (Drive, etc.)</span><input id="bi-link" value="${esc(it?.link||"")}" ${!canEdit?"readonly":""}/></label>
+      </div>`:`<label class="fl"><span class="t">🔗 Link (opcional)</span><input id="bi-link" value="${esc(it?.link||"")}" ${!canEdit?"readonly":""}/></label>`}
       ${it?`<div style="margin-top:10px;border-top:1px solid var(--line);padding-top:10px">
         <b style="font-size:12px;color:var(--muted);text-transform:uppercase">Comentarios</b>
         <div style="margin-top:6px">${commentThread(cFor("board_"+it.id))}</div>
@@ -698,13 +706,12 @@ async function saveBoardItem(id,userId,date){
 }
 async function moveBoardItem(id,col){
   const it=data.boardItems.find(x=>x.id===id);if(!it)return;
-  if(col==="done"&&!it.hours){
-    const hours=document.getElementById("bi-hours")?Number(document.getElementById("bi-hours").value)||0:0;
-    const link=document.getElementById("bi-link")?val("bi-link"):(it.link||"");
-    try{await fb.fs.collection("board_items").doc(id).update({col,hours,link});closeModal();}catch(e){alert("Error: "+e.message);}
-    return;
-  }
-  try{await fb.fs.collection("board_items").doc(id).update({col});closeModal();}catch(e){alert("Error: "+e.message);}
+  try{
+    const payload={col,updatedAt:new Date().toISOString()};
+    const text=document.getElementById("bi-text");if(text)payload.text=text.value.trim();
+    const link=document.getElementById("bi-link");if(link)payload.link=link.value.trim();
+    await fb.fs.collection("board_items").doc(id).update(payload);closeModal();
+  }catch(e){alert("Error: "+e.message);}
 }
 async function deleteBoardItem(id){
   if(!confirm("¿Eliminar esta tarjeta?"))return;
@@ -724,29 +731,55 @@ async function saveDayNote(date){
 function renderResumenSemanal(role){
   const start=getWeekStart(0),days=weekDays(start);
   let users=data.users.filter(u=>u.role!=="supervisor");
-  if(role==="colaborador")users=users.filter(u=>u.id===state.user.uid);
+  if(role==="colaborador"){
+    const me=users.filter(u=>u.id===state.user.uid);
+    const others=users.filter(u=>u.id!==state.user.uid);
+    users=[...me,...others];
+  }
   let html=`<div class="filterbar"><b>Semana del ${fmtDate(isoOfDate(days[0]))} al ${fmtDate(isoOfDate(days[5]))}</b></div>`;
-  html+=`<div class="scroll"><div class="weekgrid"><div class="wh">Persona</div>${days.map(d=>{const iso=isoOfDate(d);const fer=isHoliday(iso);return `<div class="wh" style="${fer?"background:#fef2f2;color:#dc2626":""}">${dayLabel(d)}<br><span style="font-family:var(--mono);font-weight:400">${d.getDate()}/${d.getMonth()+1}</span>${fer?"<br>FERIADO":""}</div>`;}).join("")}`;
+  html+=`<div class="scroll"><div class="weekgrid" style="grid-template-columns:140px repeat(6,1fr) 90px"><div class="wh">Persona</div>${days.map(d=>{const iso=isoOfDate(d);const fer=isHoliday(iso);const isToday=iso===todayISO();return `<div class="wh" style="${fer?"background:#fef2f2;color:#dc2626":isToday?"background:#eff6ff;color:var(--accent)":""}">${dayLabel(d)}<br><span style="font-family:var(--mono);font-weight:400">${d.getDate()}/${d.getMonth()+1}</span>${fer?"<br>FERIADO":""}</div>`;}).join("")}<div class="wh" style="background:#f0fdf4">TOTAL<br>SEMANA</div>`;
   users.forEach(u=>{
-    html+=`<div class="wname"><div class="avatar sm">${initials(u.name)}</div>${esc(u.name)}</div>`;
+    const isMe=u.id===state.user.uid;
+    html+=`<div class="wname" style="${isMe?"background:#eff6ff;font-weight:600":""}"><div class="avatar sm">${initials(u.name)}</div>${esc(u.name)}${isMe?" (tú)":""}</div>`;
+    let weekDone=0,weekTotal=0,weekAutoHours=0;
     days.forEach(d=>{
       const iso=isoOfDate(d);
       const fer=isHoliday(iso);
+      const isToday=iso===todayISO();
       const items=data.boardItems.filter(b=>b.userId===u.id&&b.date===iso);
       const done=items.filter(i=>i.col==="done").length;
       const total=items.length;
+      const dayCap=dailyCapacity(iso);
+      const dayWorked=done>0;
+      if(dayWorked&&!fer)weekAutoHours+=dayCap;
+      weekDone+=done;weekTotal+=total;
       let content="";
-      if(fer)content=`<span style="color:#dc2626;font-size:10px">Feriado</span>`;
-      else if(total===0)content=`<span style="color:var(--muted);font-size:10px">—</span>`;
+      if(fer){content=`<span style="color:#dc2626;font-size:10px">Feriado</span>`;}
+      else if(total===0){content=`<span style="color:var(--muted);font-size:10px">—</span>`;}
       else{
-        const color=done===total?"var(--green)":done>0?"var(--amber)":"var(--red)";
-        content=`<span style="font-family:var(--mono);font-weight:600;color:${color}">${done}/${total}</span><span style="font-size:9px;color:var(--muted)">hecho</span>`;
+        const pct=Math.round(done/total*100);
+        const color=pct===100?"var(--green)":pct>=50?"var(--amber)":"var(--red)";
+        content=`<div style="font-family:var(--mono);font-size:16px;font-weight:700;color:${color}">${pct}%</div>
+          <div class="devbar" style="height:4px;margin:3px 6px 0"><div class="fill" style="width:${pct}%;background:${color}"></div></div>
+          <div style="font-size:9px;color:var(--muted);margin-top:2px">${done}/${total} tareas</div>
+          ${dayWorked?`<div style="font-size:9px;color:var(--green);font-weight:600;margin-top:1px">✅ ${dayCap}h</div>`:`<div style="font-size:9px;color:var(--amber);margin-top:1px">⏳ pendiente</div>`}`;
       }
-      html+=`<div class="weekcell" style="${fer?"background:#fef9f9":""}" onclick="openDaySummary('${u.id}','${iso}')">${content}</div>`;
+      html+=`<div class="weekcell" style="${fer?"background:#fef9f9":isToday?"background:#eff6ff":""};padding:6px" onclick="openDaySummary('${u.id}','${iso}')">${content}</div>`;
     });
+    const weekPct=weekTotal?Math.round(weekDone/weekTotal*100):0;
+    const wColor=weekPct>=80?"var(--green)":weekPct>=50?"var(--amber)":weekTotal===0?"var(--muted)":"var(--red)";
+    const wCap=weeklyCapacity();
+    const hoursPct=wCap?Math.round(weekAutoHours/wCap*100):0;
+    const hColor=hoursPct>=80?"var(--green)":hoursPct>=50?"var(--amber)":"var(--muted)";
+    html+=`<div class="weekcell" style="background:#f0fdf4;padding:6px;border-left:2px solid var(--green)">
+      <div style="font-family:var(--mono);font-size:16px;font-weight:700;color:${wColor}">${weekTotal?weekPct+"%":"—"}</div>
+      <div style="font-size:9px;color:var(--muted);margin-top:2px">${weekDone}/${weekTotal} tareas</div>
+      <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:${hColor};margin-top:3px">${weekAutoHours}h / ${wCap}h</div>
+      <div class="devbar" style="height:4px;margin:2px 0 0"><div class="fill" style="width:${hoursPct}%;background:${hColor}"></div></div>
+    </div>`;
   });
   html+=`</div></div>`;
-  html+=`<p style="font-size:12px;color:var(--muted);margin-top:10px">Click en una celda para ver el detalle de ese día. Para registrar o editar, ve a <b>Pizarra de hoy</b>.</p>`;
+  html+=`<p style="font-size:12px;color:var(--muted);margin-top:10px">Click en una celda para ver el detalle. Para registrar o editar, ve a <b>Pizarra de hoy</b>.</p>`;
   return html;
 }
 function openDaySummary(userId,iso){
@@ -831,36 +864,132 @@ function viewDesempeno(){
   const users=data.users.filter(u=>u.role!=="supervisor");
   const cutoff=new Date();cutoff.setDate(cutoff.getDate()-30);
   const cutoffISO=isoOfDate(cutoff);
-  let html=ph("Desempeño del Equipo","Métricas de los últimos 30 días, visibles para Jefe y Supervisores.");
-  html+=`<div class="grid g2">`;
-  users.forEach(u=>{
+  let workDays=0;let expectedHours=0;
+  for(let d=new Date(cutoff);d<=new Date();d.setDate(d.getDate()+1)){
+    const iso=isoOfDate(d);
+    const cap=dailyCapacity(iso);
+    if(cap>0&&!isHoliday(iso)){workDays++;expectedHours+=cap;}
+  }
+
+  let html=ph("Desempeño del Equipo",`Últimos 30 días (${workDays} días hábiles · ${expectedHours}h esperadas). Jornada: L-V 8h + Sáb 4.5h.`);
+  html+=`<div class="tabs">
+    <button class="${state.desempenoTab==="personas"?"active":""}" data-act="dtab" data-id="personas">👤 Por persona</button>
+    <button class="${state.desempenoTab==="dashboards"?"active":""}" data-act="dtab" data-id="dashboards">📊 Dashboards</button>
+  </div>`;
+
+  const statsOf=u=>{
     const items=data.boardItems.filter(b=>b.userId===u.id&&b.date>=cutoffISO);
-    const totalHours=items.reduce((a,b)=>a+(b.hours||0),0);
-    const daysWithItems=new Set(items.map(b=>b.date)).size;
+    const doneByDay={};
+    items.filter(b=>b.col==="done").forEach(b=>{doneByDay[b.date]=true;});
+    const daysWorked=Object.keys(doneByDay).length;
+    let autoHours=0;
+    Object.keys(doneByDay).forEach(iso=>{if(!isHoliday(iso))autoHours+=dailyCapacity(iso);});
+    const totalItems=items.length;
+    const doneItems=items.filter(b=>b.col==="done").length;
     const planned=items.filter(b=>b.tag!=="extra");
-    const done=items.filter(b=>b.col==="done");
     const plannedDone=planned.filter(b=>b.col==="done").length;
     const extras=items.filter(b=>b.tag==="extra").length;
-    const cumpl=planned.length?Math.round(plannedDone/planned.length*100):0;
+    const blocked=items.filter(b=>b.tag==="bloq").length;
     const tasksAssigned=data.tasks.filter(t=>t.assigneeId===u.id);
     const avgProgress=tasksAssigned.length?Math.round(tasksAssigned.reduce((a,t)=>a+(t.pctReal||0),0)/tasksAssigned.length):0;
-    html+=`<div class="card"><div class="card-h"><div class="avatar sm">${initials(u.name)}</div>${esc(u.name)} <span class="role ${u.role}" style="margin-left:auto">${ROLE_LABEL[u.role]}</span></div>
-      <div class="card-b">
-        <div class="grid g4" style="gap:8px">
-          <div style="text-align:center;padding:8px;background:#f8fafc;border-radius:8px"><div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--ink2)">${totalHours.toFixed(1)}</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">Horas (30d)</div></div>
-          <div style="text-align:center;padding:8px;background:#f8fafc;border-radius:8px"><div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--ink2)">${daysWithItems}</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">Días activos</div></div>
-          <div style="text-align:center;padding:8px;background:#f8fafc;border-radius:8px"><div style="font-family:var(--mono);font-size:18px;font-weight:700;color:${cumpl>=80?"var(--green)":cumpl>=50?"var(--amber)":"var(--red)"}">${cumpl}%</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">Cumplim.</div></div>
-          <div style="text-align:center;padding:8px;background:#f8fafc;border-radius:8px"><div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--purple)">${extras}</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">Extras</div></div>
-        </div>
-        <div style="margin-top:10px;font-size:12px;color:var(--muted)">
-          <b>Frentes asignados:</b> ${tasksAssigned.length} · <b>Avance promedio:</b> ${avgProgress}%<br>
-          <b>Planificado vs. completado:</b> ${plannedDone}/${planned.length} · <b>Total tarjetas hechas:</b> ${done.length}
-        </div>
-        ${items.length===0?`<div class="alert warn" style="margin-top:10px;font-size:12px">⚠️ Sin actividad en la pizarra en los últimos 30 días</div>`:""}
-      </div></div>`;
-  });
-  html+=`</div>`;
+    return {items,daysWorked,autoHours,totalItems,doneItems,planned:planned.length,plannedDone,extras,blocked,tasksAssigned:tasksAssigned.length,avgProgress,
+      asistPct:workDays?Math.round(daysWorked/workDays*100):0,
+      cumplPct:planned.length?Math.round(plannedDone/planned.length*100):0,
+      donePct:totalItems?Math.round(doneItems/totalItems*100):0,
+      hoursPct:expectedHours?Math.round(autoHours/expectedHours*100):0,
+      extrasPct:totalItems?Math.round(extras/totalItems*100):0};
+  };
+  const allStats=users.map(u=>({user:u,...statsOf(u)}));
+  const barColor=v=>v>=80?"var(--green)":v>=50?"var(--amber)":"var(--red)";
+  const bar=(pct,color)=>`<div class="devbar" style="height:6px;margin-top:4px"><div class="fill" style="width:${pct}%;background:${color||barColor(pct)}"></div></div>`;
+
+  if(state.desempenoTab==="personas"){
+    html+=`<div class="grid g2">`;
+    allStats.forEach(s=>{
+      const u=s.user;
+      html+=`<div class="card"><div class="card-h"><div class="avatar sm">${initials(u.name)}</div>${esc(u.name)} <span class="role ${u.role}" style="margin-left:auto">${ROLE_LABEL[u.role]}</span></div>
+        <div class="card-b">
+          <div class="grid g3" style="gap:8px">
+            <div style="padding:10px;background:#f8fafc;border-radius:8px">
+              <div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:4px">Asistencia</div>
+              <div style="font-family:var(--mono);font-size:20px;font-weight:700;color:${barColor(s.asistPct)}">${s.asistPct}%</div>
+              ${bar(s.asistPct)}
+              <div style="font-size:10px;color:var(--muted);margin-top:4px">${s.daysWorked} de ${workDays} días</div>
+            </div>
+            <div style="padding:10px;background:#f8fafc;border-radius:8px">
+              <div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:4px">Cumplimiento</div>
+              <div style="font-family:var(--mono);font-size:20px;font-weight:700;color:${barColor(s.cumplPct)}">${s.cumplPct}%</div>
+              ${bar(s.cumplPct)}
+              <div style="font-size:10px;color:var(--muted);margin-top:4px">${s.plannedDone} de ${s.planned} planificadas</div>
+            </div>
+            <div style="padding:10px;background:#f8fafc;border-radius:8px">
+              <div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:4px">Productividad</div>
+              <div style="font-family:var(--mono);font-size:20px;font-weight:700;color:${barColor(s.donePct)}">${s.donePct}%</div>
+              ${bar(s.donePct)}
+              <div style="font-size:10px;color:var(--muted);margin-top:4px">${s.doneItems} de ${s.totalItems} tarjetas</div>
+            </div>
+          </div>
+          <div style="margin-top:10px;display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center">
+            <div style="padding:6px;background:#f0fdf4;border-radius:6px"><div style="font-family:var(--mono);font-weight:700;font-size:14px;color:${barColor(s.hoursPct)}">${s.hoursPct}%</div><div style="font-size:9px;color:var(--muted)">${s.autoHours}h de ${expectedHours}h</div></div>
+            <div style="padding:6px;background:#f0fdf4;border-radius:6px"><div style="font-family:var(--mono);font-weight:700;font-size:14px;color:#047857">${s.daysWorked}</div><div style="font-size:9px;color:var(--muted)">días trabajados</div></div>
+            <div style="padding:6px;background:#fef3c7;border-radius:6px"><div style="font-family:var(--mono);font-weight:700;font-size:14px;color:#92400e">${s.extrasPct}%</div><div style="font-size:9px;color:var(--muted)">Extras (${s.extras})</div></div>
+            <div style="padding:6px;background:${s.blocked?"#fee2e2":"#f8fafc"};border-radius:6px"><div style="font-family:var(--mono);font-weight:700;font-size:14px;color:${s.blocked?"#b91c1c":"var(--muted)"}">${s.blocked}</div><div style="font-size:9px;color:var(--muted)">Bloqueadas</div></div>
+          </div>
+          ${s.tasksAssigned?`<div style="margin-top:10px;padding:8px;background:#eff6ff;border-radius:6px;font-size:12px;color:#1e40af">
+            📂 <b>${s.tasksAssigned} frentes</b> asignados · Avance promedio: <b>${s.avgProgress}%</b>
+            ${bar(s.avgProgress,"var(--accent)")}
+          </div>`:""}
+          ${s.items.length===0?`<div class="alert warn" style="margin-top:10px;font-size:12px">⚠️ Sin actividad en los últimos 30 días</div>`:""}
+        </div></div>`;
+    });
+    html+=`</div>`;
+  } else {
+    html+=`<div class="grid g2" style="margin-bottom:14px">
+      <div class="card"><div class="card-h">📊 Asistencia y Horas por persona</div><div class="card-b"><div style="height:280px"><canvas id="chPerf1"></canvas></div></div></div>
+      <div class="card"><div class="card-h">📊 Cumplimiento vs Productividad</div><div class="card-b"><div style="height:280px"><canvas id="chPerf2"></canvas></div></div></div>
+    </div>
+    <div class="grid g2">
+      <div class="card"><div class="card-h">📊 Tarjetas completadas por persona</div><div class="card-b"><div style="height:260px"><canvas id="chPerf3"></canvas></div></div></div>
+      <div class="card"><div class="card-h">📊 Ranking de rendimiento global</div><div class="card-b">
+        <table><thead><tr><th>#</th><th>Persona</th><th>Asist.</th><th>Cumpl.</th><th>Horas</th><th>Prod.</th><th>Puntaje</th></tr></thead><tbody>
+        ${allStats.sort((a,b)=>((b.asistPct+b.cumplPct+b.hoursPct+b.donePct)/4)-((a.asistPct+a.cumplPct+a.hoursPct+a.donePct)/4)).map((s,i)=>{
+          const score=Math.round((s.asistPct+s.cumplPct+s.hoursPct+s.donePct)/4);
+          const medal=i===0?"🥇":i===1?"🥈":i===2?"🥉":"";
+          return `<tr><td>${medal||i+1}</td><td><b>${esc(s.user.name)}</b></td>
+            <td class="num" style="color:${barColor(s.asistPct)}">${s.asistPct}%</td>
+            <td class="num" style="color:${barColor(s.cumplPct)}">${s.cumplPct}%</td>
+            <td class="num" style="color:${barColor(s.hoursPct)}">${s.hoursPct}%</td>
+            <td class="num" style="color:${barColor(s.donePct)}">${s.donePct}%</td>
+            <td class="num" style="font-weight:700;color:${barColor(score)}">${score}%</td></tr>`;
+        }).join("")}
+        </tbody></table>
+      </div></div>
+    </div>`;
+    setTimeout(()=>initPerfCharts(allStats),50);
+  }
   return html;
+}
+
+function initPerfCharts(stats){
+  if(typeof Chart==="undefined")return;
+  const names=stats.map(s=>s.user.name.split(" ").slice(-1)[0]);
+  const opt={responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true,max:100,ticks:{font:{size:11}}},x:{ticks:{font:{size:11}}}},plugins:{legend:{labels:{font:{size:12},boxWidth:12}}}};
+  const c1=document.getElementById("chPerf1");
+  if(c1)new Chart(c1,{type:"bar",data:{labels:names,datasets:[
+    {label:"Asistencia %",data:stats.map(s=>s.asistPct),backgroundColor:"#2563eb",borderRadius:4},
+    {label:"Horas %",data:stats.map(s=>s.hoursPct),backgroundColor:"#10b981",borderRadius:4}
+  ]},options:opt});
+  const c2=document.getElementById("chPerf2");
+  if(c2)new Chart(c2,{type:"bar",data:{labels:names,datasets:[
+    {label:"Cumplimiento %",data:stats.map(s=>s.cumplPct),backgroundColor:"#f59e0b",borderRadius:4},
+    {label:"Productividad %",data:stats.map(s=>s.donePct),backgroundColor:"#7c3aed",borderRadius:4}
+  ]},options:opt});
+  const c3=document.getElementById("chPerf3");
+  if(c3)new Chart(c3,{type:"bar",data:{labels:names,datasets:[
+    {label:"Hechas",data:stats.map(s=>s.doneItems),backgroundColor:"#10b981",borderRadius:4},
+    {label:"Pendientes",data:stats.map(s=>s.totalItems-s.doneItems),backgroundColor:"#ef4444",borderRadius:4},
+    {label:"Extras",data:stats.map(s=>s.extras),backgroundColor:"#f59e0b",borderRadius:4}
+  ]},options:{...opt,scales:{...opt.scales,y:{beginAtZero:true,ticks:{font:{size:11}}}}}});
 }
 
 /* ============ EQUIPO ============ */
@@ -903,7 +1032,7 @@ function openTask(tid){
       ${canEdit?`<div style="margin-top:14px"><label class="t" style="display:block;font-size:12px;margin-bottom:4px">Avance</label>
         <input type="range" id="mtask-pct" min="0" max="100" step="5" value="${t.pctReal||0}" oninput="document.getElementById('mtask-lbl').textContent=this.value+'%'"/>
         <div style="text-align:right;font-family:var(--mono);font-weight:600" id="mtask-lbl">${t.pctReal||0}%</div></div>`:""}
-      <label class="fl" style="margin-top:10px"><span class="t">${ICONS.link} Enlace al trabajo</span>
+      <label class="fl" style="margin-top:10px"><span class="t">🔗 Enlace al trabajo</span>
         <input id="mtask-link" value="${esc(t.link||"")}" placeholder="Pega el link aquí..." ${!canEdit?"readonly":""}/></label>
       ${p.driveLink?`<div style="font-size:12px;color:var(--accent);margin-top:-6px;margin-bottom:10px">📁 Drive del expediente: <a href="${esc(p.driveLink)}" target="_blank">abrir carpeta raíz</a></div>`:""}
       <div style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px">
@@ -1237,6 +1366,7 @@ function bindEvents(){
     else if(act==="addtask")openAddTask(id);
     else if(act==="opentask")openTask(id);
     else if(act==="pztab"){state.pizarraSubtab=id;render();}
+    else if(act==="dtab"){state.desempenoTab=id;render();}
   });
   document.getElementById("app").addEventListener("input",e=>{
     if(e.target.id==="psearch"){
