@@ -111,6 +111,8 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#60a5fa;box-sh
 .bcard:hover{border-color:var(--accent)}
 .bcard.drag{opacity:.4}
 .bcard .ktag{display:inline-block;font-size:10px;font-weight:600;padding:1px 6px;border-radius:4px;margin-bottom:4px}
+.bcard-del{background:none;border:0;color:#cbd5e1;font-size:13px;line-height:1;padding:2px 4px;border-radius:4px;cursor:pointer}
+.bcard-del:hover{background:#fee2e2;color:#dc2626}
 .bcard .ktag.plan{background:#dbeafe;color:#1e40af}
 .bcard .ktag.extra{background:#fef3c7;color:#92400e}
 .bcard .ktag.obs{background:#ede9fe;color:#6d28d9}
@@ -676,7 +678,7 @@ function renderBoardCard(it,canDrag){
   const pct=it.col==="done"?100:(it.pct||0);
   const pctColor=pct>=80?"var(--green)":pct>=40?"var(--amber)":"var(--muted)";
   return `<div class="bcard" draggable="${canDrag}" ondragstart="state.dragging='${it.id}';this.classList.add('drag')" ondragend="this.classList.remove('drag');state.dragging=null" onclick="openBoardItem('${it.id}','${it.userId}','${it.date}')">
-    <div style="display:flex;align-items:center;gap:6px"><span class="ktag ${tag}">${tagLabels[tag]||"Plan"}</span>${it.col!=="todo"?`<span style="margin-left:auto;font-family:var(--mono);font-size:12px;font-weight:700;color:${pctColor}">${pct}%</span>`:""}</div>
+    <div style="display:flex;align-items:center;gap:6px"><span class="ktag ${tag}">${tagLabels[tag]||"Plan"}</span>${it.col!=="todo"?`<span style="margin-left:auto;font-family:var(--mono);font-size:12px;font-weight:700;color:${pctColor}">${pct}%</span>`:""}${canDrag?`<button class="bcard-del" title="Eliminar tarjeta" onclick="event.stopPropagation();quickDeleteBoardItem('${it.id}')">✕</button>`:""}</div>
     <div class="ktitle">${esc(it.text)}</div>
     ${it.col!=="todo"?`<div class="devbar" style="height:4px;margin:2px 0 4px"><div class="fill" style="width:${pct}%;background:${pctColor}"></div></div>`:""}
     <div class="kmeta">${p?`<span class="codetag" style="background:var(--ink2);padding:1px 5px">${esc(p.code)}</span>`:""}${it.link?` 🔗`:""}</div>
@@ -760,6 +762,11 @@ async function moveBoardItem(id,col){
 async function deleteBoardItem(id){
   if(!confirm("¿Eliminar esta tarjeta?"))return;
   try{await fb.fs.collection("board_items").doc(id).delete();closeModal();}catch(e){alert("Error: "+e.message);}
+}
+async function quickDeleteBoardItem(id){
+  const it=data.boardItems.find(x=>x.id===id);
+  if(!confirm(`¿Eliminar "${(it?.text||"").slice(0,50)}"?`))return;
+  try{await fb.fs.collection("board_items").doc(id).delete();}catch(e){alert("Error: "+e.message);}
 }
 async function continuePending(itemId,todayI){
   const it=data.boardItems.find(x=>x.id===itemId);if(!it)return;
@@ -1452,3 +1459,4 @@ function bindEvents(){
 </script>
 </body>
 </html>
+
