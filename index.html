@@ -44,6 +44,7 @@ body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Ar
 .g5{grid-template-columns:repeat(5,1fr)}.g4{grid-template-columns:repeat(4,1fr)}.g3{grid-template-columns:repeat(3,1fr)}.g2{grid-template-columns:repeat(2,1fr)}
 .span2{grid-column:span 2}
 @media(max-width:1100px){.g5,.g4{grid-template-columns:repeat(3,1fr)}.g3,.g2{grid-template-columns:1fr}.span2{grid-column:auto}}
+@media(max-width:700px){.g5,.g4,.g3{grid-template-columns:repeat(2,1fr)}}
 .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
 .kpi .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
 .kpi .val{font-family:var(--mono);font-size:24px;font-weight:700;color:var(--ink2);margin-top:6px}
@@ -55,12 +56,12 @@ th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--mute
 td{padding:8px 10px;border-top:1px solid var(--line);vertical-align:middle}
 .num{font-family:var(--mono)}.scroll{overflow-x:auto}
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%}
-.chip{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:500}
+.chip{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:500;white-space:nowrap}
 .chip.v{background:#d1fae5;color:#065f46}.chip.a{background:#fef3c7;color:#92400e}.chip.r{background:#fee2e2;color:#991b1b}
 .chip.b{background:#dbeafe;color:#1e40af}.chip.g{background:#e2e8f0;color:#475569}.chip.p{background:#ede9fe;color:#6d28d9}
 .role{border-radius:6px;padding:2px 7px;font-size:10px;font-weight:600}
 .role.jefe{background:#dbeafe;color:#1e40af}.role.colaborador{background:#e2e8f0;color:#475569}.role.supervisor{background:#ede9fe;color:#6d28d9}
-.codetag{font-family:var(--mono);font-size:11px;font-weight:700;background:var(--ink);color:#fff;border-radius:5px;padding:2px 7px}
+.codetag{font-family:var(--mono);font-size:11px;font-weight:700;background:var(--ink);color:#fff;border-radius:5px;padding:2px 7px;white-space:nowrap}
 .codetag.obs{background:#7c3aed}.codetag.paus{background:#f59e0b}.codetag.cerr{background:#10b981}
 .devbar{height:10px;border-radius:999px;background:#e2e8f0;position:relative}
 .devbar .fill{position:absolute;left:0;top:0;bottom:0;border-radius:999px}
@@ -77,6 +78,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#60a5fa;box-sh
 .btn.line{background:#fff;border:1px solid #cbd5e1;color:#475569}.btn.line:hover{background:#f8fafc}
 .btn.danger{background:#dc2626;color:#fff}.btn.danger:hover{background:#b91c1c}
 .btn.warn{background:#f59e0b;color:#fff}
+.btn[disabled]{opacity:.5;cursor:default}
 .iconbtn{background:#fff;border:1px solid var(--line);border-radius:8px;padding:6px;color:#94a3b8;display:inline-flex}
 .iconbtn:hover{background:#fef2f2;color:#dc2626}
 .iconbtn svg{width:15px;height:15px}
@@ -93,39 +95,40 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#60a5fa;box-sh
 .ck.done{background:var(--green);border-color:var(--green);color:#fff}
 .ent{display:flex;align-items:center;gap:8px;font-size:14px;margin:5px 0}
 .ent .lk{margin-left:auto;width:120px;font-size:11px;padding:3px 6px}
-.row-detail{background:#f8fafc}
 .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:14px;overflow-x:auto}
-.tabs button{background:none;color:var(--muted);padding:9px 14px;font-size:13px;border-bottom:2px solid transparent;font-weight:500}
+.tabs button{background:none;color:var(--muted);padding:9px 14px;font-size:13px;border-bottom:2px solid transparent;font-weight:500;white-space:nowrap}
 .tabs button.active{color:var(--accent);border-bottom-color:var(--accent)}
 .tabs button:hover{color:var(--ink2)}
 .filterbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
 .fchip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:13px;color:var(--muted);cursor:pointer}
 .fchip.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 .fchip:hover:not(.active){background:#f8fafc;color:var(--ink2)}
-.kanban{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;overflow-x:auto;padding-bottom:10px}
-.kcol{background:#f1f5f9;border-radius:10px;padding:10px;min-width:220px;min-height:300px}
-.kcol-h{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:8px;padding:0 4px;display:flex;align-items:center;gap:6px}
-.kcol-h .ct{margin-left:auto;background:#fff;border-radius:999px;padding:1px 7px;font-family:var(--mono);font-size:11px;color:var(--ink2)}
-.kcard{background:#fff;border:1px solid var(--line);border-radius:8px;padding:9px 11px;margin-bottom:8px;cursor:pointer;box-shadow:0 1px 1px rgba(15,23,42,.03);position:relative}
-.kcard:hover{border-color:var(--accent)}
-.kcard.drag{opacity:.4}
-.kcard .ktag{display:inline-block;font-size:10px;font-weight:600;padding:1px 6px;border-radius:4px;margin-bottom:4px}
-.kcard .ktag.plan{background:#dbeafe;color:#1e40af}
-.kcard .ktag.extra{background:#fef3c7;color:#92400e}
-.kcard .ktag.obs{background:#ede9fe;color:#6d28d9}
-.kcard .ktag.urg{background:#fee2e2;color:#991b1b}
-.kcard .ktitle{font-size:13px;font-weight:500;color:var(--ink2);line-height:1.3;margin:2px 0 4px}
-.kcard .kmeta{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);font-family:var(--mono)}
-.kcard .kbar{height:4px;background:#e2e8f0;border-radius:2px;margin-top:5px;overflow:hidden}
-.kcard .kbar .kf{height:100%;background:var(--accent);border-radius:2px}
+.board{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.bcol{background:#f1f5f9;border-radius:10px;padding:10px;min-height:120px}
+.bcol-h{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:8px;padding:0 4px;display:flex;align-items:center;gap:6px}
+.bcol-h .ct{margin-left:auto;background:#fff;border-radius:999px;padding:1px 7px;font-family:var(--mono);font-size:11px;color:var(--ink2)}
+.bcard{background:#fff;border:1px solid var(--line);border-radius:8px;padding:9px 11px;margin-bottom:8px;cursor:pointer;box-shadow:0 1px 1px rgba(15,23,42,.03)}
+.bcard:hover{border-color:var(--accent)}
+.bcard.drag{opacity:.4}
+.bcard .ktag{display:inline-block;font-size:10px;font-weight:600;padding:1px 6px;border-radius:4px;margin-bottom:4px}
+.bcard .ktag.plan{background:#dbeafe;color:#1e40af}
+.bcard .ktag.extra{background:#fef3c7;color:#92400e}
+.bcard .ktag.obs{background:#ede9fe;color:#6d28d9}
+.bcard .ktag.urg{background:#fee2e2;color:#991b1b}
+.bcard .ktag.bloq{background:#fee2e2;color:#991b1b}
+.bcard .ktitle{font-size:13px;font-weight:500;color:var(--ink2);line-height:1.3;margin:2px 0 4px}
+.bcard .kmeta{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);font-family:var(--mono);flex-wrap:wrap}
+.persongroup{margin-bottom:18px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}
+.persongroup-h{padding:10px 14px;background:#f8fafc;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.persongroup-b{padding:12px}
 .modal{position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:center;justify-content:center;z-index:100;padding:16px}
 .modal-c{background:#fff;border-radius:14px;max-width:640px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,.25)}
-.modal-h{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px;position:sticky;top:0;background:#fff;border-radius:14px 14px 0 0}
+.modal-h{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px;position:sticky;top:0;background:#fff;border-radius:14px 14px 0 0;flex-wrap:wrap}
 .modal-h h3{margin:0;font-size:16px;font-weight:600}
 .modal-h .x{margin-left:auto;background:none;color:var(--muted);padding:4px;border-radius:6px}
 .modal-h .x:hover{background:#f1f5f9;color:var(--ink2)}
 .modal-b{padding:16px 20px}
-.modal-f{padding:12px 20px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;background:#fff;border-radius:0 0 14px 14px}
+.modal-f{padding:12px 20px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;background:#fff;border-radius:0 0 14px 14px}
 .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;font-size:13px}
 .cal-h{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);text-align:center;padding:4px}
 .cal-d{background:#fff;border:1px solid var(--line);border-radius:6px;padding:6px;min-height:64px;cursor:pointer;font-size:11px;display:flex;flex-direction:column;gap:2px}
@@ -138,14 +141,10 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#60a5fa;box-sh
 .cal-d.nolog .dl{color:var(--red)}
 .weekgrid{display:grid;grid-template-columns:140px repeat(6,1fr);gap:1px;background:var(--line);font-size:12px;border-radius:8px;overflow:hidden}
 .weekgrid>div{background:#fff;padding:8px}
-.weekgrid .wh{font-weight:600;color:var(--muted);text-transform:uppercase;font-size:10px;letter-spacing:.04em;background:#f8fafc}
+.weekgrid .wh{font-weight:600;color:var(--muted);text-transform:uppercase;font-size:10px;letter-spacing:.04em;background:#f8fafc;text-align:center}
 .weekgrid .wname{font-weight:500;color:var(--ink2);background:#f8fafc;display:flex;align-items:center;gap:6px}
-.weekcell{min-height:60px;cursor:pointer;display:flex;flex-direction:column;gap:3px}
-.weekcell:hover{background:#f1f5f9}
-.wkitem{font-size:11px;background:#dbeafe;color:#1e40af;padding:2px 6px;border-radius:4px;line-height:1.2}
-.wkitem.done{background:#d1fae5;color:#065f46;text-decoration:line-through}
-.wkitem.extra{background:#fef3c7;color:#92400e}
-.tplbox{border:1px solid var(--line);border-radius:8px;padding:8px;background:#f8fafc;font-size:12px;color:var(--muted);max-height:240px;overflow-y:auto}
+.weekcell{min-height:46px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.tplbox{border:1px solid var(--line);border-radius:8px;padding:8px;background:#f8fafc;font-size:12px;color:var(--muted);max-height:200px;overflow-y:auto}
 .tplbox b{color:var(--ink2)}
 .tplbox ul{margin:4px 0 6px;padding-left:18px}
 .tplbox li{margin:1px 0}
@@ -155,22 +154,22 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#60a5fa;box-sh
 .tplopt.sel{border-color:var(--accent);background:#eff6ff}
 .tplopt b{display:block;color:var(--ink2);font-weight:600;margin-bottom:2px}
 .tplopt small{color:var(--muted);font-size:11px}
-.cap-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)}
+.cap-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
 .cap-row:last-child{border:0}
-.cap-row .cap-name{flex:1;font-size:13px}
+.cap-row .cap-name{flex:1;font-size:13px;min-width:140px}
 .cap-row input[type=number]{width:62px;text-align:center;padding:4px 6px;font-family:var(--mono)}
 .cap-row select{width:auto;min-width:140px;padding:4px 6px;font-size:12px}
 .diff{font-family:var(--mono);font-size:11px;font-weight:600}
 .diff.neg{color:var(--red)}.diff.pos{color:var(--green)}
-@media(max-width:820px){.layout{flex-direction:column}.sb{display:none}.topbar{display:block}.content{padding:16px}.tnav{display:flex;gap:8px;overflow-x:auto;padding-top:10px}.tnav button{flex:0 0 auto;background:#1e293b;color:#cbd5e1;border-radius:999px;padding:7px 13px;font-size:13px;display:inline-flex;align-items:center;gap:6px}.tnav button.active{background:var(--accent);color:#fff}.tnav svg{width:15px;height:15px}.kanban{grid-template-columns:repeat(5,260px)}.weekgrid{grid-template-columns:120px repeat(6,140px);overflow-x:auto}}
+.obscheck{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:13px}
+.obscheck input{width:auto}
+@media(max-width:820px){.layout{flex-direction:column}.sb{display:none}.topbar{display:block}.content{padding:16px}.tnav{display:flex;gap:8px;overflow-x:auto;padding-top:10px}.tnav button{flex:0 0 auto;background:#1e293b;color:#cbd5e1;border-radius:999px;padding:7px 13px;font-size:13px;display:inline-flex;align-items:center;gap:6px}.tnav button.active{background:var(--accent);color:#fff}.tnav svg{width:15px;height:15px}.board{grid-template-columns:1fr}.weekgrid{grid-template-columns:100px repeat(6,1fr);overflow-x:auto;font-size:11px}}
 </style>
 </head>
 <body>
 <div id="app"><div style="min-height:100vh;display:flex;align-items:center;justify-content:center"><p style="color:#64748b">Cargando…</p></div></div>
 <div id="modal"></div>
-
 <script>
-/* ============ CONFIGURACIÓN (ya configurada) ============ */
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyDzmn0KPAY2rImbU8okK1GXTm2VJPPx6MY",
   authDomain: "control-expedientes-3b21c.firebaseapp.com",
@@ -181,13 +180,9 @@ const FIREBASE_CONFIG = {
 };
 const JEFE_EMAILS = ["darwinrumaldof18@gmail.com"];
 
-/* ============ PLANTILLAS DE EXPEDIENTE ============ */
 const TEMPLATES = {
-  plaza: {
-    name: "Plaza Cívica",
-    icon: "🏛️",
-    desc: "Plaza, parques, espacios públicos",
-    chapters: [
+  plaza: { name:"Plaza Cívica", icon:"🏛️", desc:"Plaza, parques, espacios públicos",
+    chapters:[
       {id:"presentacion",name:"1. Presentación"},
       {id:"resumen",name:"2. Resumen Ejecutivo"},
       {id:"memoria_desc",name:"3. Memoria Descriptiva"},
@@ -199,13 +194,9 @@ const TEMPLATES = {
       {id:"cronograma",name:"9. Cronograma"},
       {id:"anexos",name:"10. Anexos"},
       {id:"planos",name:"11. Planos",subs:["Índice de Planos","Ubicación y Localización","Material Excedente","Mitigación Ambiental","Topografía","Servicios Existentes","Demoliciones","Planteamiento General","Pisos, Veredas y Rampas","Áreas Verdes","Sardineles","Mobiliario Urbano","Inst. Sanitarias","Inst. Eléctricas","Otros Planos"]}
-    ]
-  },
-  pistas: {
-    name: "Pistas y Veredas",
-    icon: "🛣️",
-    desc: "Vías urbanas, pavimentación",
-    chapters: [
+    ]},
+  pistas: { name:"Pistas y Veredas", icon:"🛣️", desc:"Vías urbanas, pavimentación",
+    chapters:[
       {id:"presentacion",name:"1. Presentación"},
       {id:"resumen",name:"2. Resumen Ejecutivo"},
       {id:"memoria_desc",name:"3. Memoria Descriptiva"},
@@ -217,13 +208,9 @@ const TEMPLATES = {
       {id:"cronograma",name:"9. Cronograma"},
       {id:"anexos",name:"10. Anexos"},
       {id:"planos",name:"11. Planos",subs:["Índice","Ubicación y Localización","Ubicación de Canteras","Material Excedente","Desvío Vehicular","Topografía","Servicios Existentes","Demoliciones","Secciones de Vías Existentes","Perfiles y Secciones Transversales","Planteamiento General","Pavimentos y Juntas","Señalización Vial","Veredas, Rampas y Martillos","Graderías","Cunetas y Badenes","Sardineles y Áreas Verdes","Muros de Contención","Mobiliario Urbano","Otros"]}
-    ]
-  },
-  defensa: {
-    name: "Defensa Ribereña",
-    icon: "🌊",
-    desc: "Muros, gaviones, protección de riberas",
-    chapters: [
+    ]},
+  defensa: { name:"Defensa Ribereña", icon:"🌊", desc:"Muros, gaviones, protección de riberas",
+    chapters:[
       {id:"caratula",name:"0. Carátula, Fichas y Resumen"},
       {id:"memoria_desc",name:"1. Memoria Descriptiva"},
       {id:"estudios_basicos",name:"2. Estudios Básicos",subs:["Informe Geodésico","Informe Topográfico","Hidrología e Hidráulica","Geología y Geotecnia","Diseños Estructurales","Análisis de Riesgos","Seguridad y Salud","Estudio Ambiental"]},
@@ -235,13 +222,9 @@ const TEMPLATES = {
       {id:"socio_amb",name:"8. Evaluación Socio Ambiental"},
       {id:"anexos",name:"9. Anexos"},
       {id:"dvd",name:"10. DVD"}
-    ]
-  },
-  canales: {
-    name: "Canales de Riego",
-    icon: "💧",
-    desc: "Canales, infraestructura de riego",
-    chapters: [
+    ]},
+  canales: { name:"Canales de Riego", icon:"💧", desc:"Canales, infraestructura de riego",
+    chapters:[
       {id:"caratula",name:"0. Carátula, Índice y Separadores"},
       {id:"memoria_desc",name:"1. Memoria Descriptiva"},
       {id:"situacion",name:"2. Situación Actual"},
@@ -255,8 +238,7 @@ const TEMPLATES = {
       {id:"anexos",name:"10. Anexos"},
       {id:"cira",name:"11. CIRA"},
       {id:"resolucion",name:"12. Resolución de Aprobación"}
-    ]
-  }
+    ]}
 };
 
 const PROJ_STATUS = {
@@ -266,49 +248,48 @@ const PROJ_STATUS = {
   observacion: {lbl:"En Observaciones",cls:"p",hex:"#7c3aed",emoji:"🔄"}
 };
 
-const KANBAN_COLS = [
+const BOARD_COLS = [
   {id:"todo",name:"Por hacer",emoji:"📋"},
-  {id:"doing",name:"En progreso",emoji:"🔨"},
-  {id:"review",name:"En revisión",emoji:"👀"},
-  {id:"done",name:"Hecho",emoji:"✅"},
-  {id:"blocked",name:"Bloqueado",emoji:"🚫"}
+  {id:"doing",name:"Haciendo",emoji:"🔨"},
+  {id:"done",name:"Hecho",emoji:"✅"}
 ];
 
 const STATUS={verde:{lbl:"En meta",cls:"v",hex:"#10b981"},amarillo:{lbl:"En riesgo",cls:"a",hex:"#f59e0b"},rojo:{lbl:"Crítico",cls:"r",hex:"#ef4444"}};
 const ROLE_LABEL={jefe:"Jefe de Proyecto",colaborador:"Colaborador",supervisor:"Supervisor"};
 const NAV={
-  jefe:[["resumen","Resumen","dash"],["proyectos","Proyectos","build"],["kanban","Pizarra","board"],["semana","Programación Semanal","week"],["calendario","Calendario","cal"],["registro","Registro Diario","reg"],["desempeno","Desempeño","perf"],["equipo","Equipo","users"],["bitacora","Bitácora","hist"]],
-  supervisor:[["resumen","Resumen","dash"],["proyectos","Proyectos","build"],["kanban","Pizarra","board"],["semana","Programación Semanal","week"],["calendario","Calendario","cal"],["desempeno","Desempeño","perf"],["bitacora","Bitácora","hist"]],
-  colaborador:[["resumen","Resumen","dash"],["proyectos","Proyectos","build"],["kanban","Pizarra","board"],["semana","Mi Semana","week"],["registro","Mi Registro Diario","reg"],["calendario","Calendario","cal"]]
+  jefe:[["resumen","Resumen","dash"],["proyectos","Proyectos","build"],["pizarra","Pizarra","board"],["calendario","Calendario","cal"],["desempeno","Desempeño","perf"],["equipo","Equipo","users"],["bitacora","Bitácora","hist"]],
+  supervisor:[["resumen","Resumen","dash"],["proyectos","Proyectos","build"],["pizarra","Pizarra","board"],["calendario","Calendario","cal"],["desempeno","Desempeño","perf"],["bitacora","Bitácora","hist"]],
+  colaborador:[["resumen","Resumen","dash"],["proyectos","Proyectos","build"],["pizarra","Mi Pizarra","board"],["calendario","Calendario","cal"]]
 };
 const ICONS={
   dash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>',
   build:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20"/><path d="M9 22v-4h6v4M8 6h.01M12 6h.01M16 6h.01M8 10h.01M12 10h.01M16 10h.01"/></svg>',
   board:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18"/><rect x="14" y="3" width="7" height="11"/></svg>',
-  week:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
   cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
-  reg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>',
   perf:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
   users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
   hist:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>',
   refresh:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>',
   out:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>',
-  trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>'
+  trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>',
+  link:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>'
 };
-
+</script>
+<script>
 const fb={app:null,auth:null,fs:null};
 const state={user:null,profile:null,tab:"resumen",pendingName:null,charts:[],authMode:"login",
-  projFilter:"activo",projSearch:"",kanbanFilter:{user:"all",project:"all"},
-  weekOffset:0,calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),
-  selectedProject:null,dragging:null};
-const data={projects:[],tasks:[],comments:[],logs:[],users:[],weekly:[],daily:[],holidays:[],khist:[]};
+  projFilter:"activo",projSearch:"",
+  pizarraSubtab:"hoy",pizarraFocus:"all",
+  calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),
+  dragging:null,_selTpl:null,_obsBaseProject:null,_obsCaps:[]};
+const data={projects:[],tasks:[],comments:[],logs:[],users:[],boardItems:[],holidays:[],dayNotes:[]};
 let unsubs=[];
 
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const fmtDate=iso=>!iso?"—":new Date(iso).toLocaleDateString("es-PE",{day:"2-digit",month:"2-digit",year:"numeric"});
+const fmtDate=iso=>!iso?"—":new Date(iso+(iso.length<=10?"T00:00:00":"")).toLocaleDateString("es-PE",{day:"2-digit",month:"2-digit",year:"numeric"});
 const fmtDT=iso=>{const d=new Date(iso);return d.toLocaleDateString("es-PE",{day:"2-digit",month:"2-digit"})+" "+d.toLocaleTimeString("es-PE",{hour:"2-digit",minute:"2-digit"});};
 const today=()=>new Date().toLocaleDateString("es-PE",{day:"2-digit",month:"2-digit",year:"numeric"});
-const todayISO=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");};
+const todayISO=()=>isoOfDate(new Date());
 const uById=id=>data.users.find(u=>u.id===id);
 const pById=id=>data.projects.find(p=>p.id===id);
 const cFor=tid=>data.comments.filter(c=>c.taskId===tid);
@@ -318,10 +299,11 @@ const statusFor=(r,e)=>{const d=r-e;return d>=-5?"verde":d>=-15?"amarillo":"rojo
 const val=id=>{const e=document.getElementById(id);return e?e.value.trim():"";};
 const valNum=id=>{const e=document.getElementById(id);return e?Number(e.value)||0:0;};
 function isConfigured(){if(typeof firebase==="undefined")return false;const c=FIREBASE_CONFIG;return c.apiKey&&c.projectId&&!JSON.stringify(c).includes("PEGAR_AQUI");}
-function getWeekStart(off=0){const d=new Date();d.setDate(d.getDate()-((d.getDay()+6)%7)+off*7);d.setHours(0,0,0,0);return d;}
+function isoOfDate(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function getWeekStart(off=0){const d=new Date();d.setDate(d.getDate()-((d.getDay()+6)%7)+(off||0)*7);d.setHours(0,0,0,0);return d;}
 function weekDays(start){const a=[];for(let i=0;i<6;i++){const d=new Date(start);d.setDate(d.getDate()+i);a.push(d);}return a;}
 function isHoliday(iso){return data.holidays.some(h=>h.date===iso);}
-function isoOfDate(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function dayLabel(d){return ["DOM","LUN","MAR","MIÉ","JUE","VIE","SÁB"][d.getDay()];}
 
 window.addEventListener("DOMContentLoaded",()=>{
   if(!isConfigured()){document.getElementById("app").innerHTML='<div style="padding:30px;text-align:center"><p>Configuración pendiente.</p></div>';return;}
@@ -354,24 +336,27 @@ function showErr(m){const e=document.getElementById("authErr");if(e)e.textConten
 
 function attachListeners(){
   detachListeners();const C=fb.fs;
-  unsubs.push(C.collection("projects").onSnapshot(s=>{data.projects=s.docs.map(d=>({id:d.id,...d.data()}));render();}));
-  unsubs.push(C.collection("tasks").onSnapshot(s=>{data.tasks=s.docs.map(d=>({id:d.id,...d.data()}));render();}));
-  unsubs.push(C.collection("comments").orderBy("createdAt","desc").onSnapshot(s=>{data.comments=s.docs.map(d=>({id:d.id,...d.data()}));render();}));
-  unsubs.push(C.collection("logs").orderBy("at","desc").limit(150).onSnapshot(s=>{data.logs=s.docs.map(d=>({id:d.id,...d.data()}));render();}));
-  unsubs.push(C.collection("users").onSnapshot(s=>{data.users=s.docs.map(d=>({id:d.id,...d.data()}));render();}));
-  unsubs.push(C.collection("weekly_plan").onSnapshot(s=>{data.weekly=s.docs.map(d=>({id:d.id,...d.data()}));render();}));
-  unsubs.push(C.collection("daily_logs").onSnapshot(s=>{data.daily=s.docs.map(d=>({id:d.id,...d.data()}));render();}));
-  unsubs.push(C.collection("holidays").onSnapshot(s=>{data.holidays=s.docs.map(d=>({id:d.id,...d.data()}));render();}));
+  unsubs.push(C.collection("projects").onSnapshot(s=>{data.projects=s.docs.map(d=>({id:d.id,...d.data()}));render();},e=>console.error("projects",e)));
+  unsubs.push(C.collection("tasks").onSnapshot(s=>{data.tasks=s.docs.map(d=>({id:d.id,...d.data()}));render();},e=>console.error("tasks",e)));
+  unsubs.push(C.collection("comments").orderBy("createdAt","desc").onSnapshot(s=>{data.comments=s.docs.map(d=>({id:d.id,...d.data()}));render();},e=>console.error("comments",e)));
+  unsubs.push(C.collection("logs").orderBy("at","desc").limit(150).onSnapshot(s=>{data.logs=s.docs.map(d=>({id:d.id,...d.data()}));render();},e=>console.error("logs",e)));
+  unsubs.push(C.collection("users").onSnapshot(s=>{data.users=s.docs.map(d=>({id:d.id,...d.data()}));render();},e=>console.error("users",e)));
+  unsubs.push(C.collection("board_items").onSnapshot(s=>{data.boardItems=s.docs.map(d=>({id:d.id,...d.data()}));render();},e=>console.error("board_items",e)));
+  unsubs.push(C.collection("holidays").onSnapshot(s=>{data.holidays=s.docs.map(d=>({id:d.id,...d.data()}));render();},e=>console.error("holidays",e)));
+  unsubs.push(C.collection("day_notes").onSnapshot(s=>{data.dayNotes=s.docs.map(d=>({id:d.id,...d.data()}));render();},e=>console.error("day_notes",e)));
 }
 function detachListeners(){unsubs.forEach(u=>{try{u();}catch(e){}});unsubs=[];}
 
 async function addLog(msg){try{await fb.fs.collection("logs").add({who:state.profile.name,role:state.profile.role,msg,at:new Date().toISOString()});}catch(e){console.error(e);}}
-async function saveProgress(tid,pct,ent){const t=data.tasks.find(x=>x.id===tid);await fb.fs.collection("tasks").doc(tid).update({pctReal:pct,entregables:ent,updatedAt:new Date().toISOString(),updatedBy:state.profile.name});addLog(`Actualizó ${t.specialty} (${pById(t.projectId)?.code}) a ${pct}%`);}
-async function addComment(tid,text,kind){await fb.fs.collection("comments").add({taskId:tid,authorId:state.user.uid,authorName:state.profile.name,role:state.profile.role,kind,text,createdAt:new Date().toISOString()});const t=data.tasks.find(x=>x.id===tid);addLog(`Comentó en ${t.specialty} (${pById(t.projectId)?.code})`);}
+async function addComment(tid,text,kind){await fb.fs.collection("comments").add({taskId:tid,authorId:state.user.uid,authorName:state.profile.name,role:state.profile.role,kind,text,createdAt:new Date().toISOString()});const t=data.tasks.find(x=>x.id===tid);if(t)addLog(`Comentó en ${t.specialty} (${pById(t.projectId)?.code||""})`);}
 async function setRole(uid,r){await fb.fs.collection("users").doc(uid).update({role:r});const u=uById(uid);addLog(`Cambió rol de ${u?.name} a ${ROLE_LABEL[r]}`);}
-
-/* ============ RENDER PRINCIPAL ============ */
+function commentThread(cs){if(!cs.length)return `<div style="font-style:italic;color:var(--muted);font-size:13px">Sin comentarios aún.</div>`;
+  return cs.map(c=>`<div class="commentbox"><div class="meta"><span class="who">${esc(c.authorName)}</span><span class="role ${c.role}">${ROLE_LABEL[c.role]||c.role}</span>${c.kind==="justificacion"?`<span class="role" style="background:#fef3c7;color:#92400e">Justificación</span>`:""}<span class="tm">${fmtDT(c.createdAt)}</span></div><p>${esc(c.text)}</p></div>`).join("");}
+</script>
+<script>
 function setApp(h){document.getElementById("app").innerHTML=h;}
+function ph(t,s,blue){return `<div class="ph ${blue?"blue":""}"><h2>${esc(t)}</h2>${s?`<p>${esc(s)}</p>`:""}</div>`;}
+
 function render(){
   if(!state.user)return renderLogin();
   if(!state.profile)return;
@@ -403,17 +388,35 @@ function render(){
   const v=document.getElementById("view");
   if(state.tab==="resumen"){v.innerHTML=viewResumen();initCharts();}
   else if(state.tab==="proyectos")v.innerHTML=viewProyectos();
-  else if(state.tab==="kanban")v.innerHTML=viewKanban();
-  else if(state.tab==="semana")v.innerHTML=viewSemana();
+  else if(state.tab==="pizarra")v.innerHTML=viewPizarra();
   else if(state.tab==="calendario")v.innerHTML=viewCalendario();
-  else if(state.tab==="registro")v.innerHTML=viewRegistro();
   else if(state.tab==="desempeno")v.innerHTML=viewDesempeno();
   else if(state.tab==="equipo"&&role==="jefe")v.innerHTML=viewEquipo();
   else if(state.tab==="bitacora")v.innerHTML=viewBitacora();
   else{v.innerHTML=viewResumen();initCharts();}
 }
 
-function ph(t,s,blue){return `<div class="ph ${blue?"blue":""}"><h2>${esc(t)}</h2>${s?`<p>${esc(s)}</p>`:""}</div>`;}
+function renderLogin(){
+  const mode=state.authMode;
+  setApp(`<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px"><div style="background:#fff;border-radius:14px;padding:28px;max-width:420px;width:100%;box-shadow:0 10px 30px rgba(15,23,42,.08)">
+    <div style="font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)">● Control · Expedientes Técnicos</div>
+    <h1 style="font-size:22px;margin:6px 0 4px">Control de Avance</h1>
+    <p style="color:var(--muted);font-size:14px">Ingresa con tu cuenta.</p>
+    <div style="display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;margin:18px 0">
+      <button data-act="authmode" data-id="login" style="flex:1;background:${mode==="login"?"var(--accent)":"#fff"};color:${mode==="login"?"#fff":"var(--muted)"};padding:9px">Iniciar sesión</button>
+      <button data-act="authmode" data-id="register" style="flex:1;background:${mode==="register"?"var(--accent)":"#fff"};color:${mode==="register"?"#fff":"var(--muted)"};padding:9px">Registrarme</button>
+    </div>
+    ${mode==="login"?`
+      <label class="fl"><span class="t">Correo</span><input id="li-email" type="email"/></label>
+      <label class="fl"><span class="t">Contraseña</span><input id="li-pass" type="password"/></label>
+      <button class="btn primary" style="width:100%" data-act="login">Entrar</button>`:`
+      <label class="fl"><span class="t">Nombre completo</span><input id="rg-name"/></label>
+      <label class="fl"><span class="t">Correo</span><input id="rg-email" type="email"/></label>
+      <label class="fl"><span class="t">Contraseña</span><input id="rg-pass" type="password" placeholder="mínimo 6 caracteres"/></label>
+      <button class="btn primary" style="width:100%" data-act="register">Crear mi cuenta</button>`}
+    <div id="authErr" style="color:#b91c1c;font-size:13px;margin-top:8px"></div>
+  </div></div>`);
+}
 
 /* ============ RESUMEN ============ */
 function viewResumen(){
@@ -425,23 +428,23 @@ function viewResumen(){
   const espOf=t=>elapsedPct(pById(t.projectId)||{});
   const activeTasks=T.filter(t=>{const p=pById(t.projectId);return p&&(p.status==="activo"||p.status==="observacion"||!p.status);});
   const counts={verde:0,amarillo:0,rojo:0};let pend=0;
-  activeTasks.forEach(t=>{counts[statusFor(t.pctReal,espOf(t))]++;pend+=(t.entregables||[]).filter(e=>!e.done).length;});
+  activeTasks.forEach(t=>{counts[statusFor(t.pctReal||0,espOf(t))]++;pend+=(t.entregables||[]).filter(e=>!e.done).length;});
   const avg=activeTasks.length?Math.round(activeTasks.reduce((a,t)=>a+(t.pctReal||0),0)/activeTasks.length):0;
-  const today=todayISO();
-  const myDailyToday=data.daily.filter(d=>d.userId===state.user.uid&&d.date===today).length;
-  const sinReg=data.users.filter(u=>u.role!=="supervisor"&&!data.daily.some(d=>d.userId===u.id&&d.date===today)).length;
+  const todayI=todayISO();
+  const myToday=data.boardItems.filter(b=>b.userId===state.user.uid&&b.date===todayI);
+  const sinReg=data.users.filter(u=>!data.boardItems.some(b=>b.userId===u.id&&b.date===todayI&&b.col==="done")).length;
   if(!P.length){
     return ph("Resumen Ejecutivo","Aún no hay expedientes cargados.",true)+
       `<div class="card"><div class="card-b" style="text-align:center"><p style="color:var(--muted)">No hay datos todavía.${state.profile.role==="jefe"?" Crea tu primer expediente en <b>Proyectos</b>.":""}</p></div></div>`;
   }
-  const kpi=(ic,tone,lbl,val,sub)=>`<div class="kpi"><div class="ic" style="background:${tone[0]};color:${tone[1]}">${ICONS[ic]}</div><div class="lbl">${lbl}</div><div class="val">${val}</div><div class="sub">${sub}</div></div>`;
-  return ph("Resumen Ejecutivo",`Control al ${today.split("-").reverse().join("/")} · ${activos.length} activos · ${paralizados.length} paralizados · ${cerrados.length} cerrados`,true)+`
+  const kpi=(ic,tone,lbl,v,sub)=>`<div class="kpi"><div class="ic" style="background:${tone[0]};color:${tone[1]}">${ICONS[ic]}</div><div class="lbl">${lbl}</div><div class="val">${v}</div><div class="sub">${sub}</div></div>`;
+  return ph("Resumen Ejecutivo",`Control al ${today()} · ${activos.length} activos · ${paralizados.length} paralizados · ${cerrados.length} cerrados`,true)+`
   <div class="grid g5">
     ${kpi("build",["#dbeafe","#1d4ed8"],"Activos",activos.length,"en desarrollo")}
     ${kpi("dash",["#d1fae5","#047857"],"Avance global",avg+"%","de los activos")}
     ${kpi("hist",["#fee2e2","#b91c1c"],"Críticos",counts.rojo,"🔴 acción")}
-    ${kpi("reg",["#fef3c7","#b45309"],"Hoy",myDailyToday,"registros tuyos")}
-    ${kpi("users",["#ede9fe","#6d28d9"],"Sin registro",sinReg,"hoy del equipo")}
+    ${kpi("board",["#fef3c7","#b45309"],"Mi pizarra hoy",myToday.length,"tarjetas")}
+    ${kpi("users",["#ede9fe","#6d28d9"],"Sin completar hoy",sinReg,"del equipo")}
   </div>
   <div class="grid g3" style="margin-top:14px">
     <div class="card span2"><div class="card-h">Avance por expediente activo — real vs. esperado</div><div class="card-b"><div style="height:260px"><canvas id="chProj"></canvas></div></div></div>
@@ -460,7 +463,7 @@ function initCharts(){
   const T=data.tasks,P=data.projects.filter(p=>p.status==="activo"||p.status==="observacion"||!p.status);
   const espOf=t=>elapsedPct(pById(t.projectId)||{});
   const projRows=P.map(p=>{const pt=T.filter(t=>t.projectId===p.id);const r=pt.length?Math.round(pt.reduce((a,t)=>a+(t.pctReal||0),0)/pt.length):0;return {name:p.code,real:r,esp:elapsedPct(p)};});
-  const counts={verde:0,amarillo:0,rojo:0};T.forEach(t=>{const p=pById(t.projectId);if(p&&(p.status==="activo"||p.status==="observacion"||!p.status))counts[statusFor(t.pctReal,espOf(t))]++;});
+  const counts={verde:0,amarillo:0,rojo:0};T.forEach(t=>{const p=pById(t.projectId);if(p&&(p.status==="activo"||p.status==="observacion"||!p.status))counts[statusFor(t.pctReal||0,espOf(t))]++;});
   const opt={responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true,max:100,ticks:{font:{size:11}}},x:{ticks:{font:{size:11}}}},plugins:{legend:{labels:{font:{size:12},boxWidth:12}}}};
   const c1=document.getElementById("chProj");
   if(c1&&projRows.length)state.charts.push(new Chart(c1,{type:"bar",data:{labels:projRows.map(r=>r.name),datasets:[{label:"Esperado",data:projRows.map(r=>r.esp),backgroundColor:"#94a3b8",borderRadius:4},{label:"Real",data:projRows.map(r=>r.real),backgroundColor:"#2563eb",borderRadius:4}]},options:opt}));
@@ -479,7 +482,7 @@ function viewProyectos(){
   projs.sort((a,b)=>(a.code||"").localeCompare(b.code||""));
   const counts={activo:0,paralizado:0,cerrado:0,observacion:0,total:data.projects.length};
   data.projects.forEach(p=>counts[p.status||"activo"]++);
-  let html=ph("Proyectos — Tablero de Control","% esperado por tiempo transcurrido. Línea = avance esperado.");
+  let html=ph("Proyectos — Tablero de Control","% esperado por tiempo transcurrido. La línea marca el avance esperado.");
   html+=`<div class="filterbar">
     <button class="fchip ${filter==="activo"?"active":""}" data-act="pfilter" data-id="activo">🟢 Activos (${counts.activo})</button>
     <button class="fchip ${filter==="paralizado"?"active":""}" data-act="pfilter" data-id="paralizado">⏸️ Paralizados (${counts.paralizado})</button>
@@ -487,7 +490,7 @@ function viewProyectos(){
     <button class="fchip ${filter==="cerrado"?"active":""}" data-act="pfilter" data-id="cerrado">✅ Cerrados (${counts.cerrado})</button>
     <button class="fchip ${filter==="mios"?"active":""}" data-act="pfilter" data-id="mios">👤 Mis expedientes</button>
     <button class="fchip ${filter==="all"?"active":""}" data-act="pfilter" data-id="all">Todos (${counts.total})</button>
-    <input id="psearch" placeholder="Buscar por código o nombre..." value="${esc(state.projSearch)}" style="margin-left:auto;max-width:280px" oninput="state.projSearch=this.value;clearTimeout(window._st);window._st=setTimeout(render,200)"/>
+    <input id="psearch" placeholder="Buscar por código o nombre..." value="${esc(state.projSearch)}" style="margin-left:auto;max-width:260px"/>
     ${role==="jefe"?`<button class="btn primary sm" data-act="newproj">+ Nuevo expediente</button>`:""}
   </div>`;
   if(!projs.length)return html+`<div class="card"><div class="card-b" style="text-align:center"><p style="color:var(--muted)">No hay expedientes en esta vista.</p></div></div>`;
@@ -509,8 +512,8 @@ function renderProject(p,role){
     <div class="card-h" style="background:#f8fafc">
       <span class="${cTagClass}">${esc(p.code)}</span>
       <div style="flex:1;min-width:200px"><div>${esc(p.name)} ${tpl?`<span style="font-size:14px">${tpl.icon}</span>`:""}</div>
-        <div style="font-size:12px;color:var(--muted)">${esc(p.location||"")} · ${fmtDate(p.startDate)} → ${fmtDate(p.endDate)}${tpl?` · ${tpl.name}`:""}</div></div>
-      <div style="display:flex;gap:14px;align-items:center">
+        <div style="font-size:12px;color:var(--muted)">${esc(p.location||"")}${p.startDate?` · ${fmtDate(p.startDate)} → ${fmtDate(p.endDate)}`:""}${tpl?` · ${tpl.name}`:p.status==="observacion"?" · Observación externa":""}</div></div>
+      <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
         <div style="text-align:right"><div style="font-size:10px;color:var(--muted);font-family:var(--mono)">tiempo</div><div class="mono" style="font-size:16px;font-weight:600">${esp}%</div></div>
         <div style="text-align:right"><div style="font-size:10px;color:var(--muted);font-family:var(--mono)">avance</div><div class="mono" style="font-size:16px;font-weight:600;color:${pst.hex}">${avg}%</div></div>
         <span class="chip ${ps.cls}">${ps.emoji} ${ps.lbl}</span>
@@ -523,92 +526,384 @@ function renderProject(p,role){
         ${responsables.map(u=>`<span style="display:inline-flex;align-items:center;gap:5px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:3px 10px"><span class="avatar sm" style="background:var(--ink2)">${initials(u.name)}</span>${esc(u.name)} <span style="color:var(--muted);font-family:var(--mono);font-size:11px">${respMap[u.id]} ${respMap[u.id]>1?"frentes":"frente"}</span></span>`).join("")}
       </div></div>`:""}
     ${p.pauseReason&&p.status==="paralizado"?`<div style="padding:10px 16px;background:#fffbeb;border-bottom:1px solid var(--line);font-size:13px;color:#92400e"><b>Motivo de pausa:</b> ${esc(p.pauseReason)}</div>`:""}
-    ${p.driveLink?`<div style="padding:8px 16px;background:#eff6ff;border-bottom:1px solid var(--line);font-size:12px"><b>📁 Drive del expediente:</b> <a href="${esc(p.driveLink)}" target="_blank" style="word-break:break-all">${esc(p.driveLink)}</a></div>`:""}
+    ${p.driveLink?`<div style="padding:8px 16px;background:#eff6ff;border-bottom:1px solid var(--line);font-size:12px">${ICONS.link} <b>Drive del expediente:</b> <a href="${esc(p.driveLink)}" target="_blank" style="word-break:break-all">${esc(p.driveLink)}</a></div>`:""}
     ${pt.length?`<div class="scroll"><table><thead><tr><th>Capítulo / Responsable</th><th>Esp.</th><th>Real</th><th>Desv.</th><th>Avance</th><th>Estado</th><th></th></tr></thead><tbody>
-      ${pt.map(t=>rowTask(t,p.status==="cerrado"?100:esp,role==="jefe"||role==="supervisor")).join("")}
+      ${pt.map(t=>rowTask(t,p.status==="cerrado"?100:esp)).join("")}
     </tbody></table></div>`:`<div class="card-b" style="text-align:center;color:var(--muted)"><p>Sin frentes registrados.</p>${role==="jefe"&&p.status!=="cerrado"?`<button class="btn line sm" data-act="addtask" data-id="${p.id}" style="margin-top:8px">+ Agregar frente</button>`:""}</div>`}
     ${role==="jefe"&&p.status!=="cerrado"&&pt.length?`<div style="padding:8px 16px;background:#f8fafc;border-top:1px solid var(--line)"><button class="btn line sm" data-act="addtask" data-id="${p.id}">+ Agregar otro frente</button></div>`:""}
   </section>`;
 }
 
-function rowTask(t,esp,canComment){
-  const st=STATUS[statusFor(t.pctReal,esp)],u=uById(t.assigneeId),desv=t.pctReal-esp;
+function rowTask(t,esp){
+  const st=STATUS[statusFor(t.pctReal||0,esp)],u=uById(t.assigneeId),desv=(t.pctReal||0)-esp;
   return `<tr><td><div style="font-weight:500">${esc(t.specialty)}</div><div style="font-size:11px;color:var(--muted)">${esc(u?.name||t.assigneeName||"— sin asignar —")}</div></td>
-  <td class="num" style="text-align:center">${esp}%</td><td class="num" style="text-align:center;font-weight:600">${t.pctReal}%</td>
+  <td class="num" style="text-align:center">${esp}%</td><td class="num" style="text-align:center;font-weight:600">${t.pctReal||0}%</td>
   <td class="num diff ${desv<0?"neg":"pos"}" style="text-align:center">${desv>0?"+":""}${desv}%</td>
-  <td><div style="width:120px"><div class="devbar"><div class="fill" style="width:${t.pctReal}%;background:${st.hex}"></div><div class="tick" style="left:${Math.min(esp,100)}%"></div></div></div></td>
+  <td><div style="width:120px"><div class="devbar"><div class="fill" style="width:${t.pctReal||0}%;background:${st.hex}"></div><div class="tick" style="left:${Math.min(esp,100)}%"></div></div></div></td>
   <td style="text-align:center"><span class="chip ${st.cls}"><span class="dot" style="background:${st.hex}"></span></span></td>
   <td><button class="btn line sm" data-act="opentask" data-id="${t.id}">ver</button></td></tr>`;
 }
-
-/* ============ KANBAN ============ */
-function viewKanban(){
+</script>
+<script>
+/* ============ PIZARRA ============ */
+function viewPizarra(){
   const role=state.profile.role;
-  const ufil=state.kanbanFilter.user,pfil=state.kanbanFilter.project;
-  let tasks=data.tasks.slice();
-  if(role==="colaborador"&&ufil==="all"){}
-  if(ufil!=="all")tasks=tasks.filter(t=>t.assigneeId===ufil);
-  if(pfil!=="all")tasks=tasks.filter(t=>t.projectId===pfil);
-  tasks=tasks.filter(t=>{const p=pById(t.projectId);return p&&p.status!=="cerrado";});
-  const byCol={};KANBAN_COLS.forEach(c=>byCol[c.id]=[]);
-  tasks.forEach(t=>{const col=t.kanbanCol||"todo";if(byCol[col])byCol[col].push(t);});
-  let html=ph("Pizarra Kanban","Arrastra las tarjetas entre columnas. Cualquiera puede crear su propia tarjeta extra.");
+  let html=ph(role==="colaborador"?"Mi Pizarra":"Pizarra del Equipo",
+    state.pizarraSubtab==="hoy"
+      ?"Organiza tu día en tres columnas. Arrastra las tarjetas o usa los botones para moverlas."
+      :"Vista de solo lectura: lo realizado y lo pendiente de cada día de la semana.");
+  html+=`<div class="tabs">
+    <button class="${state.pizarraSubtab==="hoy"?"active":""}" data-act="pztab" data-id="hoy">📋 Pizarra de hoy</button>
+    <button class="${state.pizarraSubtab==="semana"?"active":""}" data-act="pztab" data-id="semana">📅 Resumen semanal</button>
+  </div>`;
+  if(state.pizarraSubtab==="hoy")html+=renderPizarraHoy(role);
+  else html+=renderResumenSemanal(role);
+  return html;
+}
+
+function renderPizarraHoy(role){
+  const todayI=todayISO();
+  const fer=isHoliday(todayI);
+  let html="";
+  if(fer)html+=`<div class="alert warn" style="margin-bottom:14px">📅 Hoy está marcado como <b>feriado</b>. Igual puedes registrar si trabajaste.</div>`;
+
+  let people;
+  if(role==="colaborador")people=[uById(state.user.uid)].filter(Boolean);
+  else{
+    people=data.users.filter(u=>u.role!=="supervisor");
+    if(state.pizarraFocus!=="all")people=people.filter(u=>u.id===state.pizarraFocus);
+  }
+
+  if(role!=="colaborador"){
+    html+=`<div class="filterbar">
+      <select onchange="state.pizarraFocus=this.value;render()" style="width:auto;min-width:200px">
+        <option value="all" ${state.pizarraFocus==="all"?"selected":""}>Ver a todos</option>
+        ${data.users.filter(u=>u.role!=="supervisor").map(u=>`<option value="${u.id}" ${state.pizarraFocus===u.id?"selected":""}>${esc(u.name)}</option>`).join("")}
+      </select>
+    </div>`;
+  }
+
+  people.forEach(u=>{
+    const items=data.boardItems.filter(b=>b.userId===u.id&&b.date===todayI);
+    const byCol={};BOARD_COLS.forEach(c=>byCol[c.id]=[]);
+    items.forEach(it=>{(byCol[it.col]||byCol.todo).push(it);});
+    const isMe=u.id===state.user.uid;
+    html+=`<div class="persongroup">
+      <div class="persongroup-h">
+        <div class="avatar sm">${initials(u.name)}</div><b>${esc(u.name)}</b>
+        ${u.id===state.user.uid?'<span class="role colaborador">tú</span>':""}
+        ${(role==="jefe"&&isMe)||(role!=="colaborador"&&u.id===state.user.uid)||isMe?`<button class="btn primary sm" style="margin-left:auto" onclick="openBoardItem(null,'${u.id}','${todayI}')">+ Agregar tarea</button>`:""}
+      </div>
+      <div class="persongroup-b">
+        <div class="board">
+          ${BOARD_COLS.map(col=>`<div class="bcol" ondragover="event.preventDefault()" ondrop="dropBoardItem('${col.id}','${u.id}')">
+            <div class="bcol-h">${col.emoji} ${col.name} <span class="ct">${byCol[col.id].length}</span></div>
+            ${byCol[col.id].map(it=>renderBoardCard(it,u.id===state.user.uid)).join("")}
+          </div>`).join("")}
+        </div>
+      </div>
+    </div>`;
+  });
+
+  if(!people.length)html+=`<div class="card"><div class="card-b" style="text-align:center;color:var(--muted)">No hay personas para mostrar.</div></div>`;
+
+  if(role==="jefe"||role==="supervisor"){
+    const note=data.dayNotes.find(n=>n.date===todayI);
+    html+=`<div class="card"><div class="card-h">📝 Nota del día para todo el equipo</div><div class="card-b">
+      ${note?`<div class="commentbox"><div class="meta"><span class="who">${esc(note.authorName)}</span><span class="role ${note.role}">${ROLE_LABEL[note.role]}</span><span class="tm">${fmtDT(note.createdAt)}</span></div><p>${esc(note.text)}</p></div>`:""}
+      <div style="display:flex;gap:8px;margin-top:8px"><input id="daynote-text" placeholder="Escribe una nota visible para todo el equipo hoy..."/><button class="btn dark sm" onclick="saveDayNote('${todayI}')">Publicar</button></div>
+    </div></div>`;
+  }else{
+    const notes=data.dayNotes.filter(n=>n.date===todayI);
+    if(notes.length)html+=`<div class="card"><div class="card-h">📝 Nota del día</div><div class="card-b">${notes.map(n=>`<div class="commentbox"><div class="meta"><span class="who">${esc(n.authorName)}</span><span class="role ${n.role}">${ROLE_LABEL[n.role]}</span><span class="tm">${fmtDT(n.createdAt)}</span></div><p>${esc(n.text)}</p></div>`).join("")}</div></div>`;
+  }
+  return html;
+}
+
+function renderBoardCard(it,canDrag){
+  const p=it.projectId?pById(it.projectId):null;
+  const tagLabels={plan:"Planificada",extra:"Extra",obs:"Observación",bloq:"Bloqueado"};
+  const tag=it.tag||"plan";
+  return `<div class="bcard" draggable="${canDrag}" ondragstart="state.dragging='${it.id}';this.classList.add('drag')" ondragend="this.classList.remove('drag');state.dragging=null" onclick="openBoardItem('${it.id}','${it.userId}','${it.date}')">
+    <span class="ktag ${tag}">${tagLabels[tag]||"Plan"}</span>
+    <div class="ktitle">${esc(it.text)}</div>
+    <div class="kmeta">${p?`<span class="codetag" style="background:var(--ink2);padding:1px 5px">${esc(p.code)}</span>`:""}${it.hours?`${ICONS.hist} ${it.hours}h`:""}${it.link?`${ICONS.link}`:""}</div>
+  </div>`;
+}
+
+async function dropBoardItem(col,ownerId){
+  if(!state.dragging)return;
+  const it=data.boardItems.find(x=>x.id===state.dragging);if(!it){state.dragging=null;return;}
+  if(it.userId!==state.user.uid){alert("Solo el dueño de la tarjeta puede moverla.");state.dragging=null;return;}
+  const payload={col};
+  if(col==="done"&&!it.hours&&!it.askedExtra){
+    state.dragging=null;
+    return openBoardItem(it.id,it.userId,it.date,true);
+  }
+  try{await fb.fs.collection("board_items").doc(it.id).update(payload);}catch(e){alert("Error: "+e.message);}
+  state.dragging=null;
+}
+
+function openBoardItem(id,userId,date,askDone){
+  const it=id?data.boardItems.find(x=>x.id===id):null;
+  const role=state.profile.role;
+  const isOwner=it?it.userId===state.user.uid:userId===state.user.uid;
+  const canEdit=isOwner||role==="jefe";
+  const projOpts=data.projects.filter(p=>p.status!=="cerrado").map(p=>`<option value="${p.id}" ${it?.projectId===p.id?"selected":""}>${esc(p.code)} · ${esc(p.name)}</option>`).join("");
+  document.getElementById("modal").innerHTML=`<div class="modal"><div class="modal-c">
+    <div class="modal-h"><h3>${it?"Tarjeta":"Nueva tarea"}</h3>${it?`<span class="codetag">${esc((uById(it.userId)||{}).name||"")}</span>`:""}<button class="x" onclick="closeModal()">✕</button></div>
+    <div class="modal-b">
+      <label class="fl"><span class="t">¿Qué hay que hacer / qué hiciste?</span><textarea id="bi-text" rows="2" ${!canEdit?"readonly":""}>${esc(it?.text||"")}</textarea></label>
+      <div class="grid g2">
+        <label class="fl"><span class="t">Expediente (opcional)</span><select id="bi-proj" ${!canEdit?"disabled":""}><option value="">— ninguno —</option>${projOpts}</select></label>
+        <label class="fl"><span class="t">Tipo</span><select id="bi-tag" ${!canEdit?"disabled":""}>
+          <option value="plan" ${(it?.tag||"plan")==="plan"?"selected":""}>Planificada</option>
+          <option value="extra" ${it?.tag==="extra"?"selected":""}>Extra (no planificada)</option>
+          <option value="obs" ${it?.tag==="obs"?"selected":""}>Observación</option>
+          <option value="bloq" ${it?.tag==="bloq"?"selected":""}>Bloqueado</option>
+        </select></label>
+      </div>
+      ${askDone||it?.col==="done"||(it&&it.hours)?`<div class="grid g2">
+        <label class="fl"><span class="t">⏱️ Horas trabajadas</span><input type="number" id="bi-hours" step="0.5" min="0" max="14" value="${it?.hours||""}" ${!canEdit?"readonly":""}/></label>
+        <label class="fl"><span class="t">${ICONS.link} Link al trabajo (Drive, etc.)</span><input id="bi-link" value="${esc(it?.link||"")}" ${!canEdit?"readonly":""}/></label>
+      </div>`:`<label class="fl"><span class="t">${ICONS.link} Link (opcional)</span><input id="bi-link" value="${esc(it?.link||"")}" ${!canEdit?"readonly":""}/></label>`}
+      ${it?`<div style="margin-top:10px;border-top:1px solid var(--line);padding-top:10px">
+        <b style="font-size:12px;color:var(--muted);text-transform:uppercase">Comentarios</b>
+        <div style="margin-top:6px">${commentThread(cFor("board_"+it.id))}</div>
+        ${(role==="jefe"||role==="supervisor")?`<div style="display:flex;gap:8px;margin-top:8px"><input id="bi-comment" placeholder="Deja tu observación..."/><button class="btn dark sm" onclick="sendBoardComment('${it.id}')">Enviar</button></div>`:""}
+      </div>`:""}
+    </div>
+    <div class="modal-f">
+      ${it&&canEdit?`<button class="btn line" onclick="moveBoardItem('${it.id}','todo')">📋 A "Por hacer"</button><button class="btn line" onclick="moveBoardItem('${it.id}','doing')">🔨 A "Haciendo"</button><button class="btn primary" onclick="moveBoardItem('${it.id}','done')">✅ Marcar hecho</button>`:""}
+      ${canEdit?`<button class="btn dark" onclick="saveBoardItem('${id||""}','${userId}','${date}')">Guardar</button>`:""}
+      ${it&&(isOwner||role==="jefe")?`<button class="btn line" onclick="deleteBoardItem('${it.id}')">${ICONS.trash}</button>`:""}
+      <button class="btn line" onclick="closeModal()">Cerrar</button>
+    </div>
+  </div></div>`;
+}
+async function saveBoardItem(id,userId,date){
+  const text=val("bi-text");if(!text)return alert("Escribe una descripción.");
+  const projectId=document.getElementById("bi-proj").value||null;
+  const tag=document.getElementById("bi-tag").value;
+  const hoursEl=document.getElementById("bi-hours");
+  const hours=hoursEl?Number(hoursEl.value)||0:0;
+  const link=val("bi-link");
+  const u=uById(userId);
+  try{
+    if(id)await fb.fs.collection("board_items").doc(id).update({text,projectId,tag,hours,link,updatedAt:new Date().toISOString()});
+    else await fb.fs.collection("board_items").add({userId,userName:u?.name||"",date,text,projectId,tag,hours,link,col:"todo",createdBy:state.profile.name,createdAt:new Date().toISOString()});
+    addLog(`${id?"Editó":"Creó"} tarjeta de ${u?.name}: "${text.slice(0,40)}"`);
+    closeModal();
+  }catch(e){alert("Error: "+e.message);}
+}
+async function moveBoardItem(id,col){
+  const it=data.boardItems.find(x=>x.id===id);if(!it)return;
+  if(col==="done"&&!it.hours){
+    const hours=document.getElementById("bi-hours")?Number(document.getElementById("bi-hours").value)||0:0;
+    const link=document.getElementById("bi-link")?val("bi-link"):(it.link||"");
+    try{await fb.fs.collection("board_items").doc(id).update({col,hours,link});closeModal();}catch(e){alert("Error: "+e.message);}
+    return;
+  }
+  try{await fb.fs.collection("board_items").doc(id).update({col});closeModal();}catch(e){alert("Error: "+e.message);}
+}
+async function deleteBoardItem(id){
+  if(!confirm("¿Eliminar esta tarjeta?"))return;
+  try{await fb.fs.collection("board_items").doc(id).delete();closeModal();}catch(e){alert("Error: "+e.message);}
+}
+async function sendBoardComment(id){
+  const v=val("bi-comment");if(!v)return;
+  await addComment("board_"+id,v,"feedback");
+  openBoardItem(id,data.boardItems.find(x=>x.id===id).userId,data.boardItems.find(x=>x.id===id).date);
+}
+async function saveDayNote(date){
+  const text=val("daynote-text");if(!text)return;
+  try{await fb.fs.collection("day_notes").add({date,text,authorName:state.profile.name,role:state.profile.role,createdAt:new Date().toISOString()});addLog(`Publicó nota del día (${date})`);}catch(e){alert("Error: "+e.message);}
+}
+
+/* ============ RESUMEN SEMANAL (solo lectura) ============ */
+function renderResumenSemanal(role){
+  const start=getWeekStart(0),days=weekDays(start);
+  let users=data.users.filter(u=>u.role!=="supervisor");
+  if(role==="colaborador")users=users.filter(u=>u.id===state.user.uid);
+  let html=`<div class="filterbar"><b>Semana del ${fmtDate(isoOfDate(days[0]))} al ${fmtDate(isoOfDate(days[5]))}</b></div>`;
+  html+=`<div class="scroll"><div class="weekgrid"><div class="wh">Persona</div>${days.map(d=>{const iso=isoOfDate(d);const fer=isHoliday(iso);return `<div class="wh" style="${fer?"background:#fef2f2;color:#dc2626":""}">${dayLabel(d)}<br><span style="font-family:var(--mono);font-weight:400">${d.getDate()}/${d.getMonth()+1}</span>${fer?"<br>FERIADO":""}</div>`;}).join("")}`;
+  users.forEach(u=>{
+    html+=`<div class="wname"><div class="avatar sm">${initials(u.name)}</div>${esc(u.name)}</div>`;
+    days.forEach(d=>{
+      const iso=isoOfDate(d);
+      const fer=isHoliday(iso);
+      const items=data.boardItems.filter(b=>b.userId===u.id&&b.date===iso);
+      const done=items.filter(i=>i.col==="done").length;
+      const total=items.length;
+      let content="";
+      if(fer)content=`<span style="color:#dc2626;font-size:10px">Feriado</span>`;
+      else if(total===0)content=`<span style="color:var(--muted);font-size:10px">—</span>`;
+      else{
+        const color=done===total?"var(--green)":done>0?"var(--amber)":"var(--red)";
+        content=`<span style="font-family:var(--mono);font-weight:600;color:${color}">${done}/${total}</span><span style="font-size:9px;color:var(--muted)">hecho</span>`;
+      }
+      html+=`<div class="weekcell" style="${fer?"background:#fef9f9":""}" onclick="openDaySummary('${u.id}','${iso}')">${content}</div>`;
+    });
+  });
+  html+=`</div></div>`;
+  html+=`<p style="font-size:12px;color:var(--muted);margin-top:10px">Click en una celda para ver el detalle de ese día. Para registrar o editar, ve a <b>Pizarra de hoy</b>.</p>`;
+  return html;
+}
+function openDaySummary(userId,iso){
+  const u=uById(userId);
+  const items=data.boardItems.filter(b=>b.userId===userId&&b.date===iso);
+  const fer=isHoliday(iso);
+  document.getElementById("modal").innerHTML=`<div class="modal"><div class="modal-c">
+    <div class="modal-h"><h3>${esc(u?.name||"")} · ${iso.split("-").reverse().join("/")}</h3>${fer?'<span class="chip r">Feriado</span>':""}<button class="x" onclick="closeModal()">✕</button></div>
+    <div class="modal-b">
+      ${items.length?items.map(it=>{const p=it.projectId?pById(it.projectId):null;const colLbl={todo:"📋 Por hacer",doing:"🔨 Haciendo",done:"✅ Hecho"}[it.col]||it.col;return `<div style="padding:8px 0;border-bottom:1px solid var(--line)"><b>${esc(it.text)}</b><div style="font-size:12px;color:var(--muted);margin-top:2px">${colLbl}${p?` · ${esc(p.code)}`:""}${it.hours?` · ${it.hours}h`:""}${it.link?` · <a href="${esc(it.link)}" target="_blank">link</a>`:""}</div></div>`;}).join(""):'<p style="color:var(--muted)">Sin tarjetas ese día.</p>'}
+    </div>
+    <div class="modal-f"><button class="btn line" onclick="closeModal()">Cerrar</button></div>
+  </div></div>`;
+}
+function closeModal(){document.getElementById("modal").innerHTML="";}
+</script>
+<script>
+/* ============ CALENDARIO ============ */
+function viewCalendario(){
+  const y=state.calYear,m=state.calMonth;
+  const role=state.profile.role;
+  const first=new Date(y,m,1),last=new Date(y,m+1,0);
+  const offset=(first.getDay()+6)%7;
+  const cells=[];for(let i=0;i<offset;i++)cells.push(null);
+  for(let d=1;d<=last.getDate();d++)cells.push(new Date(y,m,d));
+  while(cells.length%7)cells.push(null);
+  const monthName=first.toLocaleDateString("es-PE",{month:"long",year:"numeric"});
+  let html=ph("Calendario",role==="jefe"?"Click en un día para ver el detalle o marcar feriado.":"Verde = con tarjetas hechas · Rojo = sin completar.");
   html+=`<div class="filterbar">
-    <select onchange="state.kanbanFilter.user=this.value;render()" style="width:auto;min-width:160px">
-      <option value="all" ${ufil==="all"?"selected":""}>Todos los responsables</option>
-      ${data.users.map(u=>`<option value="${u.id}" ${ufil===u.id?"selected":""}>${esc(u.name)}</option>`).join("")}
-    </select>
-    <select onchange="state.kanbanFilter.project=this.value;render()" style="width:auto;min-width:200px">
-      <option value="all" ${pfil==="all"?"selected":""}>Todos los expedientes</option>
-      ${data.projects.filter(p=>p.status!=="cerrado").map(p=>`<option value="${p.id}" ${pfil===p.id?"selected":""}>${esc(p.code)} · ${esc(p.name)}</option>`).join("")}
-    </select>
-    <button class="btn primary sm" data-act="newkanban" style="margin-left:auto">+ Nueva tarjeta</button>
+    <button class="btn line sm" onclick="state.calMonth--;if(state.calMonth<0){state.calMonth=11;state.calYear--}render()">◀</button>
+    <b style="margin:0 12px;text-transform:capitalize">${monthName}</b>
+    <button class="btn line sm" onclick="state.calMonth++;if(state.calMonth>11){state.calMonth=0;state.calYear++}render()">▶</button>
+    <button class="btn line sm" onclick="const n=new Date();state.calMonth=n.getMonth();state.calYear=n.getFullYear();render()" style="margin-left:auto">Hoy</button>
   </div>
-  <div class="kanban">
-    ${KANBAN_COLS.map(col=>`<div class="kcol" data-col="${col.id}" ondragover="event.preventDefault()" ondrop="dropCard('${col.id}')">
-      <div class="kcol-h">${col.emoji} ${col.name} <span class="ct">${byCol[col.id].length}</span></div>
-      ${byCol[col.id].map(t=>renderKCard(t)).join("")}
-    </div>`).join("")}
+  <div class="cal">
+    ${["LUN","MAR","MIÉ","JUE","VIE","SÁB","DOM"].map(d=>`<div class="cal-h">${d}</div>`).join("")}
+    ${cells.map(d=>{
+      if(!d)return `<div class="cal-d off"></div>`;
+      const iso=isoOfDate(d);
+      const fer=isHoliday(iso);
+      const isToday=iso===todayISO();
+      const items=data.boardItems.filter(x=>x.date===iso);
+      const myItems=items.filter(x=>x.userId===state.user.uid);
+      const myDone=myItems.filter(x=>x.col==="done").length;
+      const nolog=role==="colaborador"&&myItems.length===0&&iso<todayISO()&&!fer&&d.getDay()!==0;
+      return `<div class="cal-d ${fer?"fer":""} ${isToday?"tod":""} ${nolog?"nolog":""}" onclick="openCalDay('${iso}')">
+        <div class="dn">${d.getDate()}</div>
+        ${fer?`<div style="font-size:9px;color:#dc2626;font-weight:600">FERIADO</div>`:""}
+        ${items.length?`<div class="dl">✓ ${items.filter(x=>x.col==="done").length}/${items.length}</div>`:role==="colaborador"&&nolog?`<div class="dl">sin reg.</div>`:""}
+      </div>`;
+    }).join("")}
   </div>`;
   return html;
 }
-function renderKCard(t){
-  const p=pById(t.projectId)||{},u=uById(t.assigneeId);
-  const tag=t.tag||"plan";const tagLabels={plan:"Planificada",extra:"Extra",obs:"Observación",urg:"Urgente"};
-  return `<div class="kcard" draggable="true" ondragstart="state.dragging='${t.id}';this.classList.add('drag')" ondragend="this.classList.remove('drag');state.dragging=null" onclick="openTask('${t.id}')">
-    <span class="ktag ${tag}">${tagLabels[tag]||"Plan"}</span>
-    <div class="ktitle">${esc(t.specialty)}</div>
-    <div class="kmeta"><span class="codetag" style="background:var(--ink2);padding:1px 5px">${esc(p.code||"?")}</span>${u?esc(u.name.split(" ").slice(-1)[0]):"— sin asignar —"}</div>
-    <div class="kbar"><div class="kf" style="width:${t.pctReal||0}%"></div></div>
-  </div>`;
+function openCalDay(iso){
+  const role=state.profile.role;
+  const fer=isHoliday(iso);
+  const ferObj=data.holidays.find(h=>h.date===iso);
+  const items=data.boardItems.filter(x=>x.date===iso);
+  const byUser={};items.forEach(it=>{(byUser[it.userId]=byUser[it.userId]||[]).push(it);});
+  document.getElementById("modal").innerHTML=`<div class="modal"><div class="modal-c">
+    <div class="modal-h"><h3>${iso.split("-").reverse().join("/")}</h3>${fer?`<span class="chip r">FERIADO</span>`:""}<button class="x" onclick="closeModal()">✕</button></div>
+    <div class="modal-b">
+      ${role==="jefe"?`<div style="margin-bottom:14px">
+        ${fer?`<button class="btn line sm" onclick="removeHoliday('${ferObj.id}')">Quitar feriado</button>${ferObj.name?`<span style="margin-left:10px;color:var(--muted)">${esc(ferObj.name)}</span>`:""}`:`<button class="btn warn sm" onclick="addHoliday('${iso}')">🔴 Marcar feriado</button>`}
+      </div>`:""}
+      ${Object.keys(byUser).length?Object.entries(byUser).map(([uid,its])=>{const u=uById(uid);return `<div style="margin-bottom:10px"><b style="font-size:13px">${esc(u?.name||"")}</b>${its.map(it=>{const p=it.projectId?pById(it.projectId):null;const colLbl={todo:"📋",doing:"🔨",done:"✅"}[it.col]||"";return `<div style="padding:4px 0;font-size:13px;color:var(--muted)">${colLbl} ${esc(it.text)}${p?` · ${esc(p.code)}`:""}${it.hours?` · ${it.hours}h`:""}</div>`;}).join("")}</div>`;}).join(""):'<p style="color:var(--muted);font-size:13px">Sin registros ese día.</p>'}
+    </div>
+    <div class="modal-f"><button class="btn line" onclick="closeModal()">Cerrar</button></div>
+  </div></div>`;
 }
-async function dropCard(col){
-  if(!state.dragging)return;
-  const t=data.tasks.find(x=>x.id===state.dragging);if(!t)return;
-  if(t.assigneeId!==state.user.uid&&state.profile.role!=="jefe"){alert("Solo el responsable o el jefe pueden mover esta tarjeta.");state.dragging=null;return;}
-  try{await fb.fs.collection("tasks").doc(t.id).update({kanbanCol:col,updatedAt:new Date().toISOString(),updatedBy:state.profile.name});addLog(`Movió ${t.specialty} a "${KANBAN_COLS.find(c=>c.id===col).name}"`);}catch(e){alert("Error: "+e.message);}
-  state.dragging=null;
+async function addHoliday(iso){
+  const name=prompt("Nombre del feriado (opcional):","");
+  try{await fb.fs.collection("holidays").add({date:iso,name:name||"",createdBy:state.profile.name,createdAt:new Date().toISOString()});addLog(`Marcó feriado ${iso}`);closeModal();}catch(e){alert("Error: "+e.message);}
 }
-function openTask(id){state.openTaskId=id;renderTaskModal(id);}
+async function removeHoliday(id){
+  try{await fb.fs.collection("holidays").doc(id).delete();addLog(`Quitó feriado`);closeModal();}catch(e){alert("Error: "+e.message);}
+}
 
-/* ============ MODAL DE TAREA ============ */
-function renderTaskModal(tid){
+/* ============ DESEMPEÑO ============ */
+function viewDesempeno(){
+  const users=data.users.filter(u=>u.role!=="supervisor");
+  const cutoff=new Date();cutoff.setDate(cutoff.getDate()-30);
+  const cutoffISO=isoOfDate(cutoff);
+  let html=ph("Desempeño del Equipo","Métricas de los últimos 30 días, visibles para Jefe y Supervisores.");
+  html+=`<div class="grid g2">`;
+  users.forEach(u=>{
+    const items=data.boardItems.filter(b=>b.userId===u.id&&b.date>=cutoffISO);
+    const totalHours=items.reduce((a,b)=>a+(b.hours||0),0);
+    const daysWithItems=new Set(items.map(b=>b.date)).size;
+    const planned=items.filter(b=>b.tag!=="extra");
+    const done=items.filter(b=>b.col==="done");
+    const plannedDone=planned.filter(b=>b.col==="done").length;
+    const extras=items.filter(b=>b.tag==="extra").length;
+    const cumpl=planned.length?Math.round(plannedDone/planned.length*100):0;
+    const tasksAssigned=data.tasks.filter(t=>t.assigneeId===u.id);
+    const avgProgress=tasksAssigned.length?Math.round(tasksAssigned.reduce((a,t)=>a+(t.pctReal||0),0)/tasksAssigned.length):0;
+    html+=`<div class="card"><div class="card-h"><div class="avatar sm">${initials(u.name)}</div>${esc(u.name)} <span class="role ${u.role}" style="margin-left:auto">${ROLE_LABEL[u.role]}</span></div>
+      <div class="card-b">
+        <div class="grid g4" style="gap:8px">
+          <div style="text-align:center;padding:8px;background:#f8fafc;border-radius:8px"><div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--ink2)">${totalHours.toFixed(1)}</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">Horas (30d)</div></div>
+          <div style="text-align:center;padding:8px;background:#f8fafc;border-radius:8px"><div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--ink2)">${daysWithItems}</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">Días activos</div></div>
+          <div style="text-align:center;padding:8px;background:#f8fafc;border-radius:8px"><div style="font-family:var(--mono);font-size:18px;font-weight:700;color:${cumpl>=80?"var(--green)":cumpl>=50?"var(--amber)":"var(--red)"}">${cumpl}%</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">Cumplim.</div></div>
+          <div style="text-align:center;padding:8px;background:#f8fafc;border-radius:8px"><div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--purple)">${extras}</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">Extras</div></div>
+        </div>
+        <div style="margin-top:10px;font-size:12px;color:var(--muted)">
+          <b>Frentes asignados:</b> ${tasksAssigned.length} · <b>Avance promedio:</b> ${avgProgress}%<br>
+          <b>Planificado vs. completado:</b> ${plannedDone}/${planned.length} · <b>Total tarjetas hechas:</b> ${done.length}
+        </div>
+        ${items.length===0?`<div class="alert warn" style="margin-top:10px;font-size:12px">⚠️ Sin actividad en la pizarra en los últimos 30 días</div>`:""}
+      </div></div>`;
+  });
+  html+=`</div>`;
+  return html;
+}
+
+/* ============ EQUIPO ============ */
+function viewEquipo(){
+  const groups=[["jefe","Jefatura"],["supervisor","Supervisores"],["colaborador","Colaboradores"]];
+  let html=ph("Gestión de Equipo","Asigna roles a cada miembro registrado.");
+  groups.forEach(([r,title])=>{
+    const list=data.users.filter(u=>u.role===r);
+    html+=`<div class="card" style="margin-bottom:14px"><div class="card-h">${title} (${list.length})</div>
+      <div>${list.map(u=>`<div style="display:flex;gap:10px;align-items:center;padding:10px 16px;border-top:1px solid var(--line);flex-wrap:wrap">
+        <div class="avatar" style="background:var(--ink2)">${initials(u.name)}</div>
+        <div style="flex:1;min-width:140px"><div style="font-weight:500">${esc(u.name)} ${u.id===state.user.uid?'<span style="color:var(--accent);font-size:12px">(tú)</span>':""}</div><div style="font-size:12px;color:var(--muted)">${esc(u.email||"")}</div></div>
+        <select onchange="setRole('${u.id}',this.value)" style="width:auto;padding:5px 8px;font-size:12px"><option value="colaborador" ${u.role==="colaborador"?"selected":""}>Colaborador</option><option value="supervisor" ${u.role==="supervisor"?"selected":""}>Supervisor</option><option value="jefe" ${u.role==="jefe"?"selected":""}>Jefe</option></select>
+      </div>`).join("")||`<div class="card-b" style="color:var(--muted);font-size:13px">Sin miembros.</div>`}</div></div>`;
+  });
+  return html;
+}
+
+/* ============ BITÁCORA ============ */
+function viewBitacora(){
+  let html=ph("Bitácora","Registro de todos los movimientos del sistema.");
+  html+=`<div class="card"><div>${data.logs.map(l=>{const rm={jefe:"jefe",supervisor:"supervisor",colaborador:"colaborador"}[l.role]||"colaborador";return `<div style="display:flex;gap:10px;align-items:center;padding:9px 16px;border-top:1px solid var(--line);font-size:14px;flex-wrap:wrap"><span style="font-family:var(--mono);font-size:11px;color:#94a3b8">${fmtDT(l.at)}</span><b>${esc(l.who)}</b><span class="role ${rm}">${ROLE_LABEL[l.role]||l.role}</span><span style="color:var(--muted)">${esc(l.msg)}</span></div>`;}).join("")||`<div class="card-b" style="color:var(--muted)">Sin movimientos.</div>`}</div></div>`;
+  return html;
+}
+</script>
+<script>
+/* ============ MODAL DE TAREA (frente de expediente) ============ */
+function openTask(tid){
   const t=data.tasks.find(x=>x.id===tid);if(!t)return;
-  const p=pById(t.projectId)||{},u=uById(t.assigneeId);
-  const esp=elapsedPct(p),st=STATUS[statusFor(t.pctReal,esp)];
+  const p=pById(t.projectId)||{};
+  const esp=elapsedPct(p),st=STATUS[statusFor(t.pctReal||0,esp)];
   const canEdit=t.assigneeId===state.user.uid||state.profile.role==="jefe";
   const canComment=state.profile.role==="jefe"||state.profile.role==="supervisor"||t.assigneeId===state.user.uid;
-  const m=document.getElementById("modal");
-  m.innerHTML=`<div class="modal"><div class="modal-c">
-    <div class="modal-h"><h3>${esc(t.specialty)}</h3><span class="codetag" style="margin-left:8px">${esc(p.code||"")}</span><button class="x" onclick="closeModal()">✕</button></div>
+  document.getElementById("modal").innerHTML=`<div class="modal"><div class="modal-c">
+    <div class="modal-h"><h3>${esc(t.specialty)}</h3><span class="codetag">${esc(p.code||"")}</span><button class="x" onclick="closeModal()">✕</button></div>
     <div class="modal-b">
       <p style="margin:0 0 12px;color:var(--muted);font-size:13px">${esc(p.name||"")}${t.dueDate?` · vence ${fmtDate(t.dueDate)}`:""}</p>
-      <div class="devbar"><div class="fill" style="width:${t.pctReal}%;background:${st.hex}"></div><div class="tick" style="left:${Math.min(esp,100)}%"></div></div>
-      <div class="devsub"><span>real ${t.pctReal}%</span><span>esp. ${esp}%</span></div>
-      ${canEdit?`<div style="margin-top:14px"><label class="t" style="display:block;font-size:12px;margin-bottom:4px">Mi avance</label>
-        <input type="range" id="mtask-pct" min="0" max="100" step="5" value="${t.pctReal}" oninput="document.getElementById('mtask-lbl').textContent=this.value+'%'"/>
-        <div style="text-align:right;font-family:var(--mono);font-weight:600" id="mtask-lbl">${t.pctReal}%</div></div>`:""}
-      <label class="fl" style="margin-top:10px"><span class="t">🔗 Enlace al trabajo (Drive, archivo, link específico)</span>
+      <div class="devbar"><div class="fill" style="width:${t.pctReal||0}%;background:${st.hex}"></div><div class="tick" style="left:${Math.min(esp,100)}%"></div></div>
+      <div class="devsub"><span>real ${t.pctReal||0}%</span><span>esp. ${esp}%</span></div>
+      ${canEdit?`<div style="margin-top:14px"><label class="t" style="display:block;font-size:12px;margin-bottom:4px">Avance</label>
+        <input type="range" id="mtask-pct" min="0" max="100" step="5" value="${t.pctReal||0}" oninput="document.getElementById('mtask-lbl').textContent=this.value+'%'"/>
+        <div style="text-align:right;font-family:var(--mono);font-weight:600" id="mtask-lbl">${t.pctReal||0}%</div></div>`:""}
+      <label class="fl" style="margin-top:10px"><span class="t">${ICONS.link} Enlace al trabajo</span>
         <input id="mtask-link" value="${esc(t.link||"")}" placeholder="Pega el link aquí..." ${!canEdit?"readonly":""}/></label>
       ${p.driveLink?`<div style="font-size:12px;color:var(--accent);margin-top:-6px;margin-bottom:10px">📁 Drive del expediente: <a href="${esc(p.driveLink)}" target="_blank">abrir carpeta raíz</a></div>`:""}
       <div style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px">
@@ -626,277 +921,33 @@ function renderTaskModal(tid){
 }
 async function saveTaskModal(tid){
   const t=data.tasks.find(x=>x.id===tid);if(!t)return;
-  const pct=Number(document.getElementById("mtask-pct")?.value||t.pctReal);
+  const pct=Number(document.getElementById("mtask-pct")?.value||t.pctReal||0);
   const link=document.getElementById("mtask-link")?.value.trim()||"";
-  try{await fb.fs.collection("tasks").doc(tid).update({pctReal:pct,link,updatedAt:new Date().toISOString(),updatedBy:state.profile.name});addLog(`Actualizó ${t.specialty} (${pById(t.projectId)?.code}) a ${pct}%`);closeModal();}catch(e){alert("Error: "+e.message);}
+  try{await fb.fs.collection("tasks").doc(tid).update({pctReal:pct,link,updatedAt:new Date().toISOString(),updatedBy:state.profile.name});addLog(`Actualizó ${t.specialty} (${pById(t.projectId)?.code||""}) a ${pct}%`);closeModal();}catch(e){alert("Error: "+e.message);}
 }
 async function sendTaskComment(tid){
   const v=val("mtask-comment");if(!v)return;
   await addComment(tid,v,state.profile.role==="colaborador"?"justificacion":"feedback");
-  renderTaskModal(tid);
+  openTask(tid);
 }
 async function deleteTask(tid){
   if(!confirm("¿Eliminar este frente de trabajo?"))return;
-  try{await fb.fs.collection("tasks").doc(tid).delete();addLog(`Eliminó tarea ${tid}`);closeModal();}catch(e){alert("Error: "+e.message);}
-}
-function commentThread(cs){if(!cs.length)return `<div style="font-style:italic;color:var(--muted);font-size:13px">Sin comentarios aún.</div>`;
-  return cs.map(c=>`<div class="commentbox"><div class="meta"><span class="who">${esc(c.authorName)}</span><span class="role ${c.role}">${ROLE_LABEL[c.role]||c.role}</span>${c.kind==="justificacion"?`<span class="role" style="background:#fef3c7;color:#92400e">Justificación</span>`:""}<span class="tm">${fmtDT(c.createdAt)}</span></div><p>${esc(c.text)}</p></div>`).join("");}
-function closeModal(){document.getElementById("modal").innerHTML="";state.openTaskId=null;}
-
-/* ============ PROGRAMACIÓN SEMANAL ============ */
-function viewSemana(){
-  const role=state.profile.role;
-  const start=getWeekStart(state.weekOffset),days=weekDays(start);
-  const startISO=isoOfDate(start);
-  let users=data.users.filter(u=>u.role!=="supervisor");
-  if(role==="colaborador")users=users.filter(u=>u.id===state.user.uid);
-  const weekItems=data.weekly.filter(w=>w.weekStart===startISO);
-  const head=`<div class="filterbar">
-    <button class="btn line sm" onclick="state.weekOffset--;render()">◀ Semana anterior</button>
-    <b style="margin:0 12px">Semana del ${fmtDate(days[0].toISOString())} al ${fmtDate(days[5].toISOString())}</b>
-    <button class="btn line sm" onclick="state.weekOffset++;render()">Semana siguiente ▶</button>
-    <button class="btn line sm" onclick="state.weekOffset=0;render()" style="margin-left:auto">Hoy</button>
-    ${role==="jefe"?`<button class="btn primary sm" onclick="openWeekItem('${startISO}',null,null)">+ Planificar tarea</button>`:""}
-  </div>`;
-  let html=ph(role==="colaborador"?"Mi Semana":"Programación Semanal",role==="colaborador"?"Lo que se planificó para mí esta semana. Marca como hecho cuando termines.":role==="jefe"?"Define qué hace cada persona cada día. Los supervisores pueden comentar.":"Vista de la programación semanal de todo el equipo.");
-  html+=head;
-  if(!users.length)return html+`<div class="card"><div class="card-b" style="text-align:center;color:var(--muted)">No hay colaboradores.</div></div>`;
-  html+=`<div class="scroll"><div class="weekgrid"><div class="wh">Persona</div>${days.map(d=>{const iso=isoOfDate(d);const fer=isHoliday(iso);return `<div class="wh" style="text-align:center;${fer?"background:#fef2f2":""}">${["LUN","MAR","MIÉ","JUE","VIE","SÁB"][d.getDay()===0?6:d.getDay()-1]}<br><span style="font-family:var(--mono);font-weight:400">${d.getDate()}/${d.getMonth()+1}</span>${fer?"<br><span style='color:#dc2626;font-size:9px'>FERIADO</span>":""}</div>`;}).join("")}`;
-  users.forEach(u=>{
-    html+=`<div class="wname"><div class="avatar sm">${initials(u.name)}</div>${esc(u.name)}</div>`;
-    days.forEach(d=>{
-      const iso=isoOfDate(d);
-      const items=weekItems.filter(w=>w.userId===u.id&&w.date===iso);
-      const fer=isHoliday(iso);
-      html+=`<div class="weekcell" style="${fer?"background:#fef9f9":""}" onclick="${role==="jefe"&&u.id?`openWeekItem('${startISO}','${u.id}','${iso}')`:""}">
-        ${items.map(i=>`<div class="wkitem ${i.done?"done":""} ${i.tag==="extra"?"extra":""}" onclick="event.stopPropagation();openWeekItem('${startISO}','${u.id}','${iso}','${i.id}')">${esc(i.text||"")}</div>`).join("")}
-        ${role==="colaborador"&&u.id===state.user.uid&&!fer?`<button class="btn line sm" style="font-size:10px;padding:2px 6px;margin-top:auto" onclick="event.stopPropagation();openWeekItem('${startISO}','${state.user.uid}','${iso}',null,true)">+ Extra</button>`:""}
-      </div>`;
-    });
-  });
-  html+=`</div></div>`;
-  return html;
-}
-function openWeekItem(weekStart,userId,date,itemId,isExtra){
-  const item=itemId?data.weekly.find(w=>w.id===itemId):null;
-  const userOpts=data.users.filter(u=>u.role!=="supervisor").map(u=>`<option value="${u.id}" ${(item?.userId||userId)===u.id?"selected":""}>${esc(u.name)}</option>`).join("");
-  const projOpts=data.projects.filter(p=>p.status!=="cerrado").map(p=>`<option value="${p.id}" ${item?.projectId===p.id?"selected":""}>${esc(p.code)} · ${esc(p.name)}</option>`).join("");
-  const role=state.profile.role;
-  const canEdit=role==="jefe"||(item&&item.userId===state.user.uid)||(isExtra&&userId===state.user.uid);
-  document.getElementById("modal").innerHTML=`<div class="modal"><div class="modal-c">
-    <div class="modal-h"><h3>${item?"Editar":isExtra?"Tarea extra del día":"Planificar tarea"}</h3><button class="x" onclick="closeModal()">✕</button></div>
-    <div class="modal-b">
-      <label class="fl"><span class="t">Responsable</span><select id="wi-user" ${role!=="jefe"?"disabled":""}>${userOpts}</select></label>
-      <label class="fl"><span class="t">Fecha</span><input type="date" id="wi-date" value="${item?.date||date||""}" ${role!=="jefe"&&!isExtra?"readonly":""}/></label>
-      <label class="fl"><span class="t">Qué hacer</span><textarea id="wi-text" rows="2" ${!canEdit?"readonly":""}>${esc(item?.text||"")}</textarea></label>
-      <label class="fl"><span class="t">Expediente (opcional)</span><select id="wi-proj"><option value="">— ninguno —</option>${projOpts}</select></label>
-      ${item?`<label style="display:flex;align-items:center;gap:8px;font-size:14px;margin-top:6px"><input type="checkbox" id="wi-done" ${item.done?"checked":""} style="width:auto"/> Marcar como hecho</label>`:""}
-    </div>
-    <div class="modal-f">
-      ${item&&role==="jefe"?`<button class="btn line" onclick="deleteWeekItem('${item.id}')">Eliminar</button>`:""}
-      ${canEdit?`<button class="btn primary" onclick="saveWeekItem('${weekStart}','${item?.id||""}',${!!isExtra})">Guardar</button>`:""}
-      <button class="btn line" onclick="closeModal()">Cerrar</button>
-    </div>
-  </div></div>`;
-}
-async function saveWeekItem(weekStart,id,isExtra){
-  const userId=document.getElementById("wi-user").value;
-  const date=document.getElementById("wi-date").value;
-  const text=val("wi-text");
-  const projectId=document.getElementById("wi-proj").value||null;
-  const doneEl=document.getElementById("wi-done");const done=doneEl?doneEl.checked:false;
-  if(!userId||!date||!text)return alert("Completa responsable, fecha y descripción.");
-  const u=uById(userId);
-  const payload={userId,assigneeName:u?.name||"",date,weekStart,text,projectId,tag:isExtra?"extra":"plan",done,updatedAt:new Date().toISOString()};
-  try{
-    if(id)await fb.fs.collection("weekly_plan").doc(id).update(payload);
-    else await fb.fs.collection("weekly_plan").add({...payload,createdBy:state.profile.name,createdAt:new Date().toISOString()});
-    addLog(`${id?"Editó":"Planificó"} tarea semanal para ${u?.name}: "${text.slice(0,40)}"`);
-    closeModal();
-  }catch(e){alert("Error: "+e.message);}
-}
-async function deleteWeekItem(id){
-  if(!confirm("¿Eliminar esta tarea de la semana?"))return;
-  try{await fb.fs.collection("weekly_plan").doc(id).delete();closeModal();}catch(e){alert("Error: "+e.message);}
+  try{await fb.fs.collection("tasks").doc(tid).delete();addLog(`Eliminó un frente de trabajo`);closeModal();}catch(e){alert("Error: "+e.message);}
 }
 
-/* ============ CALENDARIO ============ */
-function viewCalendario(){
-  const y=state.calYear,m=state.calMonth;
-  const role=state.profile.role;
-  const first=new Date(y,m,1),last=new Date(y,m+1,0);
-  const offset=(first.getDay()+6)%7;
-  const cells=[];for(let i=0;i<offset;i++)cells.push(null);
-  for(let d=1;d<=last.getDate();d++)cells.push(new Date(y,m,d));
-  while(cells.length%7)cells.push(null);
-  const monthName=first.toLocaleDateString("es-PE",{month:"long",year:"numeric"});
-  let html=ph("Calendario",role==="jefe"?"Vista del mes. Click en un día para ver el detalle. Click en + para marcar feriado.":"Vista del mes. Días verdes = con registro · Rojos = sin registro.");
-  html+=`<div class="filterbar">
-    <button class="btn line sm" onclick="state.calMonth--;if(state.calMonth<0){state.calMonth=11;state.calYear--}render()">◀</button>
-    <b style="margin:0 12px;text-transform:capitalize">${monthName}</b>
-    <button class="btn line sm" onclick="state.calMonth++;if(state.calMonth>11){state.calMonth=0;state.calYear++}render()">▶</button>
-    <button class="btn line sm" onclick="const n=new Date();state.calMonth=n.getMonth();state.calYear=n.getFullYear();render()" style="margin-left:auto">Hoy</button>
-  </div>
-  <div class="cal">
-    ${["LUN","MAR","MIÉ","JUE","VIE","SÁB","DOM"].map(d=>`<div class="cal-h">${d}</div>`).join("")}
-    ${cells.map(d=>{
-      if(!d)return `<div class="cal-d off"></div>`;
-      const iso=isoOfDate(d);
-      const fer=isHoliday(iso);
-      const isToday=iso===todayISO();
-      const dailyCount=data.daily.filter(x=>x.date===iso).length;
-      const weeklyCount=data.weekly.filter(x=>x.date===iso).length;
-      const myReg=data.daily.some(x=>x.date===iso&&x.userId===state.user.uid);
-      const nolog=!myReg&&iso<todayISO()&&!fer&&d.getDay()!==0;
-      return `<div class="cal-d ${fer?"fer":""} ${isToday?"tod":""} ${nolog?"nolog":""}" onclick="openCalDay('${iso}')">
-        <div class="dn">${d.getDate()}</div>
-        ${fer?`<div style="font-size:9px;color:#dc2626;font-weight:600">FERIADO</div>`:""}
-        ${weeklyCount?`<div style="font-size:9px;color:var(--muted)">📋 ${weeklyCount}</div>`:""}
-        ${dailyCount?`<div class="dl">✓ ${dailyCount} reg.</div>`:role==="colaborador"&&nolog?`<div class="dl">sin reg.</div>`:""}
-      </div>`;
-    }).join("")}
-  </div>`;
-  return html;
-}
-function openCalDay(iso){
-  const role=state.profile.role;
-  const fer=isHoliday(iso);
-  const ferObj=data.holidays.find(h=>h.date===iso);
-  const wkly=data.weekly.filter(w=>w.date===iso);
-  const dly=data.daily.filter(d=>d.date===iso);
-  document.getElementById("modal").innerHTML=`<div class="modal"><div class="modal-c">
-    <div class="modal-h"><h3>${iso.split("-").reverse().join("/")}</h3>${fer?`<span class="chip r" style="margin-left:8px">FERIADO</span>`:""}<button class="x" onclick="closeModal()">✕</button></div>
-    <div class="modal-b">
-      ${role==="jefe"?`<div style="margin-bottom:14px">
-        ${fer?`<button class="btn line sm" onclick="removeHoliday('${ferObj.id}')">Quitar feriado</button>${ferObj.name?`<span style="margin-left:10px;color:var(--muted)">${esc(ferObj.name)}</span>`:""}`:`<button class="btn warn sm" onclick="addHoliday('${iso}')">🔴 Marcar feriado</button>`}
-      </div>`:""}
-      <h4 style="font-size:13px;margin:0 0 6px;color:var(--muted);text-transform:uppercase">📋 Planificado (${wkly.length})</h4>
-      ${wkly.length?wkly.map(w=>{const u=uById(w.userId);return `<div style="padding:6px 0;border-bottom:1px solid var(--line);font-size:13px"><b>${esc(u?.name||"")}</b>${w.done?" ✓":""} — ${esc(w.text||"")}${w.tag==="extra"?' <span class="chip a">extra</span>':""}</div>`;}).join(""):'<p style="color:var(--muted);font-size:13px">Sin tareas planificadas.</p>'}
-      <h4 style="font-size:13px;margin:16px 0 6px;color:var(--muted);text-transform:uppercase">✅ Registros del día (${dly.length})</h4>
-      ${dly.length?dly.map(d=>{const u=uById(d.userId);const p=pById(d.projectId);return `<div style="padding:6px 0;border-bottom:1px solid var(--line);font-size:13px"><b>${esc(u?.name||d.userName||"")}</b> — ${esc(d.text||"")}${d.hours?` <span style="color:var(--muted);font-family:var(--mono)">${d.hours}h</span>`:""}${p?` <span class="codetag" style="font-size:9px">${esc(p.code)}</span>`:""}${d.link?` <a href="${esc(d.link)}" target="_blank">🔗</a>`:""}</div>`;}).join(""):'<p style="color:var(--muted);font-size:13px">Sin registros aún.</p>'}
-    </div>
-    <div class="modal-f"><button class="btn line" onclick="closeModal()">Cerrar</button></div>
-  </div></div>`;
-}
-async function addHoliday(iso){
-  const name=prompt("Nombre del feriado (opcional):","");
-  try{await fb.fs.collection("holidays").add({date:iso,name:name||"",createdBy:state.profile.name,createdAt:new Date().toISOString()});addLog(`Marcó feriado ${iso}`);closeModal();}catch(e){alert("Error: "+e.message);}
-}
-async function removeHoliday(id){
-  try{await fb.fs.collection("holidays").doc(id).delete();addLog(`Quitó feriado`);closeModal();}catch(e){alert("Error: "+e.message);}
-}
-
-/* ============ REGISTRO DIARIO ============ */
-function viewRegistro(){
-  const role=state.profile.role;
-  const today=todayISO();
-  const myToday=data.daily.filter(d=>d.userId===state.user.uid&&d.date===today);
-  const lastDays=Array.from(new Set(data.daily.filter(d=>d.userId===state.user.uid).map(d=>d.date))).sort((a,b)=>b.localeCompare(a)).slice(0,7);
-  let html=ph("Mi Registro Diario","Registra lo que hiciste hoy. Cada entrada es una tarea o avance del día.");
-  html+=`<div class="card" style="margin-bottom:14px"><div class="card-h">➕ Registrar lo que hiciste hoy</div><div class="card-b">
-    <div class="grid g2">
-      <label class="fl"><span class="t">Fecha</span><input type="date" id="dl-date" value="${today}"/></label>
-      <label class="fl"><span class="t">Expediente (opcional)</span><select id="dl-proj"><option value="">— ninguno —</option>${data.projects.filter(p=>p.status!=="cerrado").map(p=>`<option value="${p.id}">${esc(p.code)} · ${esc(p.name)}</option>`).join("")}</select></label>
-    </div>
-    <label class="fl"><span class="t">¿Qué hiciste?</span><textarea id="dl-text" rows="2" placeholder="Describí brevemente lo que avanzaste..."></textarea></label>
-    <div class="grid g2">
-      <label class="fl"><span class="t">Horas trabajadas</span><input type="number" id="dl-hours" step="0.5" min="0" max="14" placeholder="ej: 4.5"/></label>
-      <label class="fl"><span class="t">🔗 Link al trabajo (opcional)</span><input id="dl-link" placeholder="Link a Drive..."/></label>
-    </div>
-    <button class="btn primary" onclick="saveDaily()">Guardar registro</button>
-  </div></div>`;
-  if(myToday.length){
-    html+=`<div class="card" style="margin-bottom:14px"><div class="card-h">📋 Lo que ya registré hoy (${myToday.length})</div><div class="card-b">
-      ${myToday.map(d=>{const p=pById(d.projectId);return `<div style="padding:8px 0;border-bottom:1px solid var(--line);display:flex;gap:8px;align-items:flex-start">
-        <div style="flex:1"><div style="font-size:13px">${esc(d.text)}</div><div style="font-size:11px;color:var(--muted);margin-top:2px;font-family:var(--mono)">${d.hours||"—"}h ${p?`· ${esc(p.code)}`:""}${d.link?` · <a href="${esc(d.link)}" target="_blank">link</a>`:""}</div></div>
-        <button class="iconbtn" onclick="deleteDaily('${d.id}')">${ICONS.trash}</button></div>`;}).join("")}
-    </div></div>`;
-  }
-  if(lastDays.length>1){
-    html+=`<div class="card"><div class="card-h">🗓️ Últimos días registrados</div><div class="card-b">
-      ${lastDays.filter(d=>d!==today).map(date=>{const dls=data.daily.filter(x=>x.userId===state.user.uid&&x.date===date);return `<div style="margin-bottom:10px"><b style="font-size:13px">${fmtDate(date)}</b><div style="margin-top:4px">${dls.map(d=>{const p=pById(d.projectId);return `<div style="padding:4px 0;font-size:13px;color:var(--muted)">• ${esc(d.text)} <span style="font-family:var(--mono);font-size:11px">${d.hours||"—"}h${p?` · ${esc(p.code)}`:""}</span></div>`;}).join("")}</div></div>`;}).join("")}
-    </div></div>`;
-  }
-  return html;
-}
-async function saveDaily(){
-  const date=val("dl-date"),text=val("dl-text"),hours=valNum("dl-hours"),link=val("dl-link"),projectId=document.getElementById("dl-proj").value||null;
-  if(!text)return alert("Escribe qué hiciste.");
-  try{await fb.fs.collection("daily_logs").add({userId:state.user.uid,userName:state.profile.name,date,text,hours,link,projectId,createdAt:new Date().toISOString()});addLog(`Registró trabajo del ${date}: "${text.slice(0,40)}"`);document.getElementById("dl-text").value="";document.getElementById("dl-hours").value="";document.getElementById("dl-link").value="";}catch(e){alert("Error: "+e.message);}
-}
-async function deleteDaily(id){if(!confirm("¿Eliminar este registro?"))return;try{await fb.fs.collection("daily_logs").doc(id).delete();}catch(e){alert("Error: "+e.message);}}
-
-/* ============ DESEMPEÑO ============ */
-function viewDesempeno(){
-  const users=data.users.filter(u=>u.role!=="supervisor");
-  const today=new Date();const thirtyAgo=new Date();thirtyAgo.setDate(today.getDate()-30);
-  const thirtyAgoISO=isoOfDate(thirtyAgo);
-  let html=ph("Desempeño del Equipo","Métricas individuales de los últimos 30 días: cumplimiento, horas, registros.");
-  html+=`<div class="grid g2">`;
-  users.forEach(u=>{
-    const dailies=data.daily.filter(d=>d.userId===u.id&&d.date>=thirtyAgoISO);
-    const weeklies=data.weekly.filter(w=>w.userId===u.id&&w.date>=thirtyAgoISO);
-    const totalHours=dailies.reduce((a,d)=>a+(d.hours||0),0);
-    const daysRegistered=new Set(dailies.map(d=>d.date)).size;
-    const planned=weeklies.length;const completed=weeklies.filter(w=>w.done).length;
-    const extras=weeklies.filter(w=>w.tag==="extra").length;
-    const cumpl=planned?Math.round(completed/planned*100):0;
-    const tasksAssigned=data.tasks.filter(t=>t.assigneeId===u.id);
-    const avgProgress=tasksAssigned.length?Math.round(tasksAssigned.reduce((a,t)=>a+(t.pctReal||0),0)/tasksAssigned.length):0;
-    html+=`<div class="card"><div class="card-h"><div class="avatar sm">${initials(u.name)}</div>${esc(u.name)} <span class="role ${u.role}" style="margin-left:auto">${ROLE_LABEL[u.role]}</span></div>
-      <div class="card-b">
-        <div class="grid g4" style="gap:8px">
-          <div style="text-align:center;padding:8px;background:#f8fafc;border-radius:8px"><div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--ink2)">${totalHours.toFixed(1)}</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">Horas (30d)</div></div>
-          <div style="text-align:center;padding:8px;background:#f8fafc;border-radius:8px"><div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--ink2)">${daysRegistered}</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">Días reg.</div></div>
-          <div style="text-align:center;padding:8px;background:#f8fafc;border-radius:8px"><div style="font-family:var(--mono);font-size:18px;font-weight:700;color:${cumpl>=80?"var(--green)":cumpl>=50?"var(--amber)":"var(--red)"}">${cumpl}%</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">Cumplim.</div></div>
-          <div style="text-align:center;padding:8px;background:#f8fafc;border-radius:8px"><div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--purple)">${extras}</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">Extras</div></div>
-        </div>
-        <div style="margin-top:10px;font-size:12px;color:var(--muted)">
-          <b>Frentes asignados:</b> ${tasksAssigned.length} · <b>Avance promedio:</b> ${avgProgress}%<br>
-          <b>Planificado vs. completado:</b> ${completed}/${planned}
-        </div>
-        ${dailies.length===0?`<div class="alert warn" style="margin-top:10px;font-size:12px">⚠️ Sin registros en los últimos 30 días</div>`:""}
-      </div></div>`;
-  });
-  html+=`</div>`;
-  return html;
-}
-
-/* ============ EQUIPO (solo jefe) ============ */
-function viewEquipo(){
-  const groups=[["jefe","Jefatura"],["supervisor","Supervisores"],["colaborador","Colaboradores"]];
-  let html=ph("Gestión de Equipo","Asigna roles y áreas a cada miembro.");
-  groups.forEach(([r,title])=>{
-    const list=data.users.filter(u=>u.role===r);
-    html+=`<div class="card" style="margin-bottom:14px"><div class="card-h">${title} (${list.length})</div>
-      <div>${list.map(u=>`<div style="display:flex;gap:10px;align-items:center;padding:10px 16px;border-top:1px solid var(--line)">
-        <div class="avatar" style="background:var(--ink2)">${initials(u.name)}</div>
-        <div style="flex:1"><div style="font-weight:500">${esc(u.name)} ${u.id===state.user.uid?'<span style="color:var(--accent);font-size:12px">(tú)</span>':""}</div><div style="font-size:12px;color:var(--muted)">${esc(u.email||"")}</div></div>
-        <select onchange="setRole('${u.id}',this.value)" style="width:auto;padding:5px 8px;font-size:12px"><option value="colaborador" ${u.role==="colaborador"?"selected":""}>Colaborador</option><option value="supervisor" ${u.role==="supervisor"?"selected":""}>Supervisor</option><option value="jefe" ${u.role==="jefe"?"selected":""}>Jefe</option></select>
-      </div>`).join("")||`<div class="card-b" style="color:var(--muted);font-size:13px">Sin miembros.</div>`}</div></div>`;
-  });
-  return html;
-}
-
-/* ============ BITÁCORA ============ */
-function viewBitacora(){
-  let html=ph("Bitácora","Registro de todos los movimientos.");
-  html+=`<div class="card"><div>${data.logs.map(l=>{const rm={jefe:"jefe",supervisor:"supervisor",colaborador:"colaborador"}[l.role]||"colaborador";return `<div style="display:flex;gap:10px;align-items:center;padding:9px 16px;border-top:1px solid var(--line);font-size:14px;flex-wrap:wrap"><span style="font-family:var(--mono);font-size:11px;color:#94a3b8">${fmtDT(l.at)}</span><b>${esc(l.who)}</b><span class="role ${rm}">${ROLE_LABEL[l.role]||l.role}</span><span style="color:var(--muted)">${esc(l.msg)}</span></div>`;}).join("")||`<div class="card-b" style="color:var(--muted)">Sin movimientos.</div>`}</div></div>`;
-  return html;
-}
-
-/* ============ CREAR/EDITAR EXPEDIENTE ============ */
+/* ============ CREAR EXPEDIENTE ============ */
 function openNewProject(){
   document.getElementById("modal").innerHTML=`<div class="modal"><div class="modal-c">
     <div class="modal-h"><h3>Nuevo expediente</h3><button class="x" onclick="closeModal()">✕</button></div>
     <div class="modal-b">
-      <label class="fl"><span class="t">1️⃣ Tipo de carga inicial</span>
+      <label class="fl"><span class="t">1️⃣ Tipo</span>
         <select id="np-mode" onchange="updateNpForm()">
-          <option value="curso">📂 En curso — generar capítulos principales (puedo poner % actual de cada uno)</option>
-          <option value="observacion">🔄 Observaciones de expediente externo (sin plantilla)</option>
+          <option value="curso">📂 Expediente nuestro (en curso / nuevo)</option>
+          <option value="observacion">🔄 Observaciones de un expediente</option>
         </select>
       </label>
-      <div id="np-tpl-section">
+
+      <div id="np-curso-section">
         <label class="fl"><span class="t">2️⃣ Plantilla del expediente</span>
           <div class="tplsel">
             ${Object.entries(TEMPLATES).map(([k,t])=>`<div class="tplopt" data-tpl="${k}" onclick="selectTpl('${k}')"><b>${t.icon} ${t.name}</b><small>${t.desc}</small></div>`).join("")}
@@ -904,11 +955,34 @@ function openNewProject(){
         </label>
         <div id="np-tpl-preview"></div>
       </div>
-      <div class="grid g2">
-        <label class="fl"><span class="t">Código</span><input id="np-code" placeholder="ET-04"/></label>
+
+      <div id="np-obs-section" style="display:none">
+        <label class="fl"><span class="t">2️⃣ ¿Este expediente ya existe en el sistema?</span>
+          <select id="np-obs-exists" onchange="updateObsForm()">
+            <option value="no">No, es externo / no lo manejamos</option>
+            <option value="si">Sí, es uno de los nuestros</option>
+          </select>
+        </label>
+        <div id="np-obs-base" style="display:none">
+          <label class="fl"><span class="t">Expediente base</span>
+            <select id="np-obs-baseproj" onchange="selectObsBase()">
+              <option value="">— elegir —</option>
+              ${data.projects.filter(p=>p.template).map(p=>`<option value="${p.id}">${esc(p.code)} · ${esc(p.name)}</option>`).join("")}
+            </select>
+          </label>
+          <div id="np-obs-caps"></div>
+        </div>
+      </div>
+
+      <div class="grid g2" style="margin-top:8px">
+        <label class="fl"><span class="t">Código</span><input id="np-code" placeholder="ET-04 / OBS-01"/></label>
         <label class="fl"><span class="t">Nombre</span><input id="np-name" placeholder="Mejoramiento de..."/></label>
         <label class="fl"><span class="t">Ubicación</span><input id="np-loc"/></label>
-        <label class="fl"><span class="t">Estado</span><select id="np-status"><option value="activo">🟢 Activo</option><option value="paralizado">⏸️ Paralizado</option><option value="observacion">🔄 En observaciones</option></select></label>
+        <label class="fl"><span class="t">Estado</span><select id="np-status">
+          <option value="activo">🟢 Activo</option>
+          <option value="paralizado">⏸️ Paralizado</option>
+          <option value="observacion" selected>🔄 En observaciones</option>
+        </select></label>
         <label class="fl"><span class="t">Fecha real de inicio</span><input type="date" id="np-start"/></label>
         <label class="fl"><span class="t">Fecha límite</span><input type="date" id="np-end"/></label>
       </div>
@@ -920,12 +994,43 @@ function openNewProject(){
       <button class="btn line" onclick="closeModal()">Cancelar</button>
     </div>
   </div></div>`;
-  state._selTpl=null;
+  state._selTpl=null;state._obsBaseProject=null;state._obsCaps=[];
   updateNpForm();
 }
 function updateNpForm(){
   const mode=document.getElementById("np-mode").value;
-  document.getElementById("np-tpl-section").style.display=mode==="observacion"?"none":"block";
+  document.getElementById("np-curso-section").style.display=mode==="curso"?"block":"none";
+  document.getElementById("np-obs-section").style.display=mode==="observacion"?"block":"none";
+  document.getElementById("np-caps-section").style.display="none";
+  document.getElementById("np-caps-section").innerHTML="";
+  if(mode==="curso")document.getElementById("np-status").value="activo";
+  else document.getElementById("np-status").value="observacion";
+}
+function updateObsForm(){
+  const exists=document.getElementById("np-obs-exists").value;
+  document.getElementById("np-obs-base").style.display=exists==="si"?"block":"none";
+  document.getElementById("np-caps-section").style.display="none";
+  document.getElementById("np-caps-section").innerHTML="";
+  if(exists==="no"){
+    document.getElementById("np-caps-section").style.display="block";
+    document.getElementById("np-caps-section").innerHTML=`<div style="margin-top:6px;border-top:1px solid var(--line);padding-top:12px">
+      <b style="font-size:12px;text-transform:uppercase;color:var(--muted)">3️⃣ Frentes observados (escribe manualmente)</b>
+      <div id="obs-manual-list" style="margin-top:8px"></div>
+      <button class="btn line sm" onclick="addManualObsCap()" style="margin-top:6px">+ Agregar frente</button>
+    </div>`;
+    addManualObsCap();
+  }
+}
+function addManualObsCap(){
+  const userOpts=`<option value="">— sin asignar —</option>${data.users.filter(u=>u.role!=="supervisor").map(u=>`<option value="${u.id}">${esc(u.name)}</option>`).join("")}`;
+  const list=document.getElementById("obs-manual-list");
+  const idx=list.children.length;
+  const row=document.createElement("div");
+  row.className="cap-row";
+  row.innerHTML=`<input class="cap-name" placeholder="Nombre del frente observado" style="flex:1;min-width:140px" data-manual="${idx}"/>
+    <select data-manual-user="${idx}">${userOpts}</select>
+    <button class="iconbtn" onclick="this.parentElement.remove()">${ICONS.trash}</button>`;
+  list.appendChild(row);
 }
 function selectTpl(k){
   state._selTpl=k;
@@ -933,7 +1038,7 @@ function selectTpl(k){
   const t=TEMPLATES[k];
   document.getElementById("np-tpl-preview").innerHTML=`<div class="tplbox">
     <b>Estructura completa:</b><ul>${t.chapters.map(c=>`<li>${esc(c.name)}${c.subs?` <span style="color:var(--muted)">(${c.subs.length} sub)</span>`:""}</li>`).join("")}</ul>
-    <i>Solo se generarán automáticamente los capítulos principales como frentes de trabajo. Los sub-incisos los agregas después conforme avance.</i>
+    <i>Se generan los capítulos principales como frentes de trabajo. Los sub-incisos los agregas después.</i>
   </div>`;
   renderCapForm(t);
 }
@@ -941,16 +1046,36 @@ function renderCapForm(t){
   const userOpts=`<option value="">— sin asignar —</option>${data.users.filter(u=>u.role!=="supervisor").map(u=>`<option value="${u.id}">${esc(u.name)}</option>`).join("")}`;
   document.getElementById("np-caps-section").style.display="block";
   document.getElementById("np-caps-section").innerHTML=`<div style="margin-top:6px;border-top:1px solid var(--line);padding-top:12px">
-    <b style="font-size:12px;text-transform:uppercase;color:var(--muted)">3️⃣ Define el avance actual de cada capítulo:</b>
+    <b style="font-size:12px;text-transform:uppercase;color:var(--muted)">3️⃣ Avance actual de cada capítulo:</b>
     <div style="margin-top:8px">
       ${t.chapters.map((c,i)=>`<div class="cap-row">
         <span class="cap-name">${esc(c.name)}</span>
-        <input type="number" min="0" max="100" value="0" id="cap-pct-${i}" data-cap="${c.id}" data-name="${esc(c.name)}"/>
+        <input type="number" min="0" max="100" value="0" id="cap-pct-${i}"/>
         <span style="font-size:11px;color:var(--muted)">%</span>
         <select id="cap-user-${i}">${userOpts}</select>
       </div>`).join("")}
     </div>
-    <p style="font-size:11px;color:var(--muted);margin:10px 0 0">💡 Pon 100% a los capítulos ya completos/aprobados. Asigna responsable a los que están en curso.</p>
+    <p style="font-size:11px;color:var(--muted);margin:10px 0 0">💡 Pon 100% a los capítulos ya completos/aprobados.</p>
+  </div>`;
+}
+function selectObsBase(){
+  const pid=document.getElementById("np-obs-baseproj").value;
+  state._obsBaseProject=pid;
+  const capsDiv=document.getElementById("np-obs-caps");
+  if(!pid){capsDiv.innerHTML="";document.getElementById("np-caps-section").style.display="none";document.getElementById("np-caps-section").innerHTML="";return;}
+  const p=pById(pid);const t=p.template?TEMPLATES[p.template]:null;
+  if(!t){capsDiv.innerHTML='<p style="color:var(--muted);font-size:12px">Este expediente no tiene plantilla asociada.</p>';return;}
+  const userOpts=`<option value="">— sin asignar —</option>${data.users.filter(u=>u.role!=="supervisor").map(u=>`<option value="${u.id}">${esc(u.name)}</option>`).join("")}`;
+  document.getElementById("np-caps-section").style.display="block";
+  document.getElementById("np-caps-section").innerHTML=`<div style="margin-top:6px;border-top:1px solid var(--line);padding-top:12px">
+    <b style="font-size:12px;text-transform:uppercase;color:var(--muted)">3️⃣ Marca qué capítulos vienen observados</b>
+    <div style="margin-top:8px">
+      ${t.chapters.map((c,i)=>`<div class="obscheck">
+        <input type="checkbox" id="obscap-${i}"/>
+        <label for="obscap-${i}" style="flex:1">${esc(c.name)}</label>
+        <select id="obscap-user-${i}" style="width:auto;min-width:140px;padding:4px 6px;font-size:12px">${userOpts}</select>
+      </div>`).join("")}
+    </div>
   </div>`;
 }
 async function saveNewProject(){
@@ -958,26 +1083,71 @@ async function saveNewProject(){
   const code=val("np-code"),name=val("np-name");
   if(!code||!name)return alert("Código y nombre son obligatorios.");
   const status=document.getElementById("np-status").value;
-  const payload={code,name,location:val("np-loc"),startDate:val("np-start"),endDate:val("np-end"),driveLink:val("np-drive"),status,template:mode==="observacion"?null:state._selTpl,createdAt:new Date().toISOString(),createdBy:state.profile.name};
+  const payload={code,name,location:val("np-loc"),startDate:val("np-start"),endDate:val("np-end"),driveLink:val("np-drive"),status,createdAt:new Date().toISOString(),createdBy:state.profile.name};
   if(status==="paralizado"){const r=prompt("¿Motivo de la pausa?","");payload.pauseReason=r||"";}
-  if(mode!=="observacion"&&!state._selTpl)return alert("Elige una plantilla.");
-  try{
-    const ref=await fb.fs.collection("projects").add(payload);
-    addLog(`Creó expediente ${code} - ${name}`);
-    if(mode!=="observacion"){
+
+  if(mode==="curso"){
+    if(!state._selTpl)return alert("Elige una plantilla.");
+    payload.template=state._selTpl;
+    try{
+      const ref=await fb.fs.collection("projects").add(payload);
+      addLog(`Creó expediente ${code} - ${name}`);
       const t=TEMPLATES[state._selTpl];
       for(let i=0;i<t.chapters.length;i++){
         const cap=t.chapters[i];
         const pct=valNum(`cap-pct-${i}`);
         const userId=document.getElementById(`cap-user-${i}`).value||null;
         const u=userId?uById(userId):null;
-        await fb.fs.collection("tasks").add({projectId:ref.id,specialty:cap.name,capId:cap.id,assigneeId:userId,assigneeName:u?.name||"",pctReal:pct,entregables:[],kanbanCol:pct>=100?"done":pct>0?"doing":"todo",createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),updatedBy:state.profile.name});
+        await fb.fs.collection("tasks").add({projectId:ref.id,specialty:cap.name,capId:cap.id,assigneeId:userId,assigneeName:u?.name||"",pctReal:pct,entregables:[],createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),updatedBy:state.profile.name});
       }
-    }
-    closeModal();
-  }catch(e){alert("Error: "+e.message);}
+      closeModal();
+    }catch(e){alert("Error: "+e.message);}
+    return;
+  }
+
+  const exists=document.getElementById("np-obs-exists").value;
+  if(exists==="si"){
+    const basePid=state._obsBaseProject;
+    if(!basePid)return alert("Elige el expediente base.");
+    const baseP=pById(basePid);const t=TEMPLATES[baseP.template];
+    payload.template=baseP.template;
+    payload.basedOn=basePid;
+    const selected=[];
+    t.chapters.forEach((c,i)=>{const ck=document.getElementById(`obscap-${i}`);if(ck&&ck.checked){const userId=document.getElementById(`obscap-user-${i}`).value||null;selected.push({cap:c,userId});}});
+    if(!selected.length)return alert("Marca al menos un capítulo observado.");
+    try{
+      const ref=await fb.fs.collection("projects").add(payload);
+      addLog(`Creó expediente de observaciones ${code} (basado en ${baseP.code})`);
+      for(const {cap,userId} of selected){
+        const u=userId?uById(userId):null;
+        await fb.fs.collection("tasks").add({projectId:ref.id,specialty:cap.name+" (OBS)",capId:cap.id,assigneeId:userId,assigneeName:u?.name||"",pctReal:0,entregables:[],createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),updatedBy:state.profile.name});
+      }
+      closeModal();
+    }catch(e){alert("Error: "+e.message);}
+    return;
+  }else{
+    const list=document.getElementById("obs-manual-list");
+    const rows=[...list.querySelectorAll(".cap-row")];
+    const items=rows.map(r=>{
+      const name=r.querySelector("[data-manual]").value.trim();
+      const userSel=r.querySelector("[data-manual-user]");
+      return {name,userId:userSel?userSel.value:""};
+    }).filter(x=>x.name);
+    if(!items.length)return alert("Agrega al menos un frente observado.");
+    payload.template=null;
+    try{
+      const ref=await fb.fs.collection("projects").add(payload);
+      addLog(`Creó expediente externo de observaciones ${code} - ${name}`);
+      for(const it of items){
+        const u=it.userId?uById(it.userId):null;
+        await fb.fs.collection("tasks").add({projectId:ref.id,specialty:it.name+" (OBS)",assigneeId:it.userId||null,assigneeName:u?.name||"",pctReal:0,entregables:[],createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),updatedBy:state.profile.name});
+      }
+      closeModal();
+    }catch(e){alert("Error: "+e.message);}
+  }
 }
 
+/* ============ EDITAR EXPEDIENTE ============ */
 function openEditProject(pid){
   const p=pById(pid);if(!p)return;
   document.getElementById("modal").innerHTML=`<div class="modal"><div class="modal-c">
@@ -994,6 +1164,7 @@ function openEditProject(pid){
         <label class="fl"><span class="t">Fecha fin</span><input type="date" id="ep-end" value="${p.endDate||""}"/></label>
       </div>
       <label class="fl"><span class="t">Motivo de pausa (si está paralizado)</span><input id="ep-pause" value="${esc(p.pauseReason||"")}"/></label>
+      <label class="fl"><span class="t">Avance declarado % (solo si está cerrado)</span><input type="number" min="0" max="100" id="ep-declared" value="${p.declaredPct||100}"/></label>
       <label class="fl"><span class="t">📁 Link de Drive</span><input id="ep-drive" value="${esc(p.driveLink||"")}"/></label>
     </div>
     <div class="modal-f">
@@ -1004,7 +1175,7 @@ function openEditProject(pid){
   </div></div>`;
 }
 async function saveEditProject(pid){
-  const payload={code:val("ep-code"),name:val("ep-name"),location:val("ep-loc"),status:document.getElementById("ep-status").value,startDate:val("ep-start"),endDate:val("ep-end"),pauseReason:val("ep-pause"),driveLink:val("ep-drive"),updatedAt:new Date().toISOString()};
+  const payload={code:val("ep-code"),name:val("ep-name"),location:val("ep-loc"),status:document.getElementById("ep-status").value,startDate:val("ep-start"),endDate:val("ep-end"),pauseReason:val("ep-pause"),declaredPct:valNum("ep-declared"),driveLink:val("ep-drive"),updatedAt:new Date().toISOString()};
   try{await fb.fs.collection("projects").doc(pid).update(payload);addLog(`Editó expediente ${payload.code}`);closeModal();}catch(e){alert("Error: "+e.message);}
 }
 async function deleteProject(pid){
@@ -1013,10 +1184,11 @@ async function deleteProject(pid){
     const ts=data.tasks.filter(t=>t.projectId===pid);
     for(const t of ts)await fb.fs.collection("tasks").doc(t.id).delete();
     await fb.fs.collection("projects").doc(pid).delete();
-    addLog(`Eliminó expediente ${pid}`);closeModal();
+    addLog(`Eliminó un expediente`);closeModal();
   }catch(e){alert("Error: "+e.message);}
 }
 
+/* ============ AGREGAR FRENTE ============ */
 function openAddTask(pid){
   const p=pById(pid);if(!p)return;
   const tpl=p.template?TEMPLATES[p.template]:null;
@@ -1045,35 +1217,7 @@ async function saveAddTask(pid){
   const name=val("at-name");if(!name)return alert("Escribe el nombre del frente.");
   const userId=document.getElementById("at-user").value||null;const u=userId?uById(userId):null;
   const pct=valNum("at-pct");
-  try{await fb.fs.collection("tasks").add({projectId:pid,specialty:name,assigneeId:userId,assigneeName:u?.name||"",pctReal:pct,entregables:[],dueDate:val("at-due"),kanbanCol:pct>=100?"done":pct>0?"doing":"todo",createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),updatedBy:state.profile.name});addLog(`Agregó frente "${name}" a ${pById(pid).code}`);closeModal();}catch(e){alert("Error: "+e.message);}
-}
-
-function openNewKanban(){
-  const userOpts=data.users.filter(u=>u.role!=="supervisor").map(u=>`<option value="${u.id}" ${u.id===state.user.uid?"selected":""}>${esc(u.name)}</option>`).join("");
-  const projOpts=data.projects.filter(p=>p.status!=="cerrado").map(p=>`<option value="${p.id}">${esc(p.code)} · ${esc(p.name)}</option>`).join("");
-  document.getElementById("modal").innerHTML=`<div class="modal"><div class="modal-c">
-    <div class="modal-h"><h3>+ Nueva tarjeta en pizarra</h3><button class="x" onclick="closeModal()">✕</button></div>
-    <div class="modal-b">
-      <label class="fl"><span class="t">¿Qué hay que hacer?</span><input id="nk-name" placeholder="Describe la tarea"/></label>
-      <div class="grid g2">
-        <label class="fl"><span class="t">Expediente</span><select id="nk-proj"><option value="">— ninguno —</option>${projOpts}</select></label>
-        <label class="fl"><span class="t">Responsable</span><select id="nk-user" ${state.profile.role!=="jefe"?"disabled":""}>${userOpts}</select></label>
-        <label class="fl"><span class="t">Tipo</span><select id="nk-tag"><option value="extra">Extra (no planificada)</option><option value="plan">Planificada</option><option value="urg">Urgente</option><option value="obs">Observación</option></select></label>
-        <label class="fl"><span class="t">Fecha límite</span><input type="date" id="nk-due"/></label>
-      </div>
-    </div>
-    <div class="modal-f">
-      <button class="btn primary" onclick="saveNewKanban()">Crear tarjeta</button>
-      <button class="btn line" onclick="closeModal()">Cancelar</button>
-    </div>
-  </div></div>`;
-}
-async function saveNewKanban(){
-  const name=val("nk-name");if(!name)return alert("Escribe la descripción.");
-  const projectId=document.getElementById("nk-proj").value||null;
-  const userId=document.getElementById("nk-user").value;const u=userId?uById(userId):null;
-  const tag=document.getElementById("nk-tag").value;
-  try{await fb.fs.collection("tasks").add({projectId:projectId||"kanban-libre",specialty:name,assigneeId:userId||state.user.uid,assigneeName:u?.name||state.profile.name,pctReal:0,entregables:[],dueDate:val("nk-due"),tag,kanbanCol:"todo",createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),updatedBy:state.profile.name});addLog(`Creó tarjeta en pizarra: "${name}"`);closeModal();}catch(e){alert("Error: "+e.message);}
+  try{await fb.fs.collection("tasks").add({projectId:pid,specialty:name,assigneeId:userId,assigneeName:u?.name||"",pctReal:pct,entregables:[],dueDate:val("at-due"),createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),updatedBy:state.profile.name});addLog(`Agregó frente "${name}" a ${pById(pid).code}`);closeModal();}catch(e){alert("Error: "+e.message);}
 }
 
 /* ============ EVENTOS GLOBALES ============ */
@@ -1092,31 +1236,15 @@ function bindEvents(){
     else if(act==="editproj")openEditProject(id);
     else if(act==="addtask")openAddTask(id);
     else if(act==="opentask")openTask(id);
-    else if(act==="newkanban")openNewKanban();
+    else if(act==="pztab"){state.pizarraSubtab=id;render();}
   });
-}
-
-/* ============ LOGIN ============ */
-function renderLogin(){
-  const mode=state.authMode;
-  setApp(`<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px"><div style="background:#fff;border-radius:14px;padding:28px;max-width:420px;width:100%;box-shadow:0 10px 30px rgba(15,23,42,.08)">
-    <div style="font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)">● Control · Expedientes Técnicos</div>
-    <h1 style="font-size:22px;margin:6px 0 4px">Control de Avance</h1>
-    <p style="color:var(--muted);font-size:14px">Ingresa con tu cuenta.</p>
-    <div style="display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;margin:18px 0">
-      <button onclick="state.authMode='login';renderLogin()" style="flex:1;background:${mode==="login"?"var(--accent)":"#fff"};color:${mode==="login"?"#fff":"var(--muted)"};padding:9px">Iniciar sesión</button>
-      <button onclick="state.authMode='register';renderLogin()" style="flex:1;background:${mode==="register"?"var(--accent)":"#fff"};color:${mode==="register"?"#fff":"var(--muted)"};padding:9px">Registrarme</button>
-    </div>
-    ${mode==="login"?`
-      <label class="fl"><span class="t">Correo</span><input id="li-email" type="email"/></label>
-      <label class="fl"><span class="t">Contraseña</span><input id="li-pass" type="password"/></label>
-      <button class="btn primary" style="width:100%" data-act="login">Entrar</button>`:`
-      <label class="fl"><span class="t">Nombre completo</span><input id="rg-name"/></label>
-      <label class="fl"><span class="t">Correo</span><input id="rg-email" type="email"/></label>
-      <label class="fl"><span class="t">Contraseña</span><input id="rg-pass" type="password" placeholder="mínimo 6 caracteres"/></label>
-      <button class="btn primary" style="width:100%" data-act="register">Crear mi cuenta</button>`}
-    <div id="authErr" style="color:#b91c1c;font-size:13px;margin-top:8px"></div>
-  </div></div>`);
+  document.getElementById("app").addEventListener("input",e=>{
+    if(e.target.id==="psearch"){
+      state.projSearch=e.target.value;
+      clearTimeout(window._searchTimer);
+      window._searchTimer=setTimeout(render,250);
+    }
+  });
 }
 </script>
 </body>
