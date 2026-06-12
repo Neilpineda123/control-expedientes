@@ -403,7 +403,7 @@ function render(){
   else if(state.tab==="proyectos")v.innerHTML=viewProyectos();
   else if(state.tab==="pizarra")v.innerHTML=viewPizarra();
   else if(state.tab==="calendario")v.innerHTML=viewCalendario();
-  else if(state.tab==="desempeno")v.innerHTML=viewDesempeno();
+  else if(state.tab==="desempeno"){v.innerHTML=viewDesempeno();if(state.desempenoTab==="dashboards"&&state._lastPerfStats)initPerfCharts(state._lastPerfStats);}
   else if(state.tab==="equipo"&&role==="jefe")v.innerHTML=viewEquipo();
   else if(state.tab==="bitacora"&&role==="jefe")v.innerHTML=viewBitacora();
   else{v.innerHTML=viewResumen();initCharts();}
@@ -1075,37 +1075,44 @@ function viewDesempeno(){
         </tbody></table>
       </div></div>
     </div>`;
-    state._renderToken=(state._renderToken||0)+1;
-    const myToken=state._renderToken;
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{
-      if(state._renderToken===myToken)initPerfCharts(allStats);
-    }));
+    state._lastPerfStats=allStats;
   }
   return html;
 }
 
 function initPerfCharts(stats){
-  if(typeof Chart==="undefined")return;
-  if(state.tab!=="desempeno"||state.desempenoTab!=="dashboards")return;
+  if(typeof Chart==="undefined"){
+    ["chPerf1","chPerf2","chPerf3"].forEach(id=>{
+      const c=document.getElementById(id);
+      if(c&&c.parentElement)c.parentElement.innerHTML='<p style="color:var(--red);font-size:12px;padding:10px">⚠️ No se pudo cargar la librería de gráficos (Chart.js). Verifica tu conexión a internet y recarga la página.</p>';
+    });
+    return;
+  }
   state.perfCharts.forEach(c=>{try{c.destroy();}catch(e){}});state.perfCharts=[];
-  const names=stats.map(s=>s.user.name.split(" ").slice(-1)[0]);
-  const opt={responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true,max:100,ticks:{font:{size:11}}},x:{ticks:{font:{size:11}}}},plugins:{legend:{labels:{font:{size:12},boxWidth:12}}}};
-  const c1=document.getElementById("chPerf1");
-  if(c1)state.perfCharts.push(new Chart(c1,{type:"bar",data:{labels:names,datasets:[
-    {label:"Asistencia %",data:stats.map(s=>s.asistPct),backgroundColor:"#2563eb",borderRadius:4},
-    {label:"Horas %",data:stats.map(s=>s.hoursPct),backgroundColor:"#10b981",borderRadius:4}
-  ]},options:opt}));
-  const c2=document.getElementById("chPerf2");
-  if(c2)state.perfCharts.push(new Chart(c2,{type:"bar",data:{labels:names,datasets:[
-    {label:"Cumplimiento %",data:stats.map(s=>s.cumplPct),backgroundColor:"#f59e0b",borderRadius:4},
-    {label:"Avance acumulado %",data:stats.map(s=>s.avanceAcumPct),backgroundColor:"#7c3aed",borderRadius:4}
-  ]},options:opt}));
-  const c3=document.getElementById("chPerf3");
-  if(c3)state.perfCharts.push(new Chart(c3,{type:"bar",data:{labels:names,datasets:[
-    {label:"Hechas",data:stats.map(s=>s.doneItems),backgroundColor:"#10b981",borderRadius:4},
-    {label:"Pendientes",data:stats.map(s=>s.totalItems-s.doneItems),backgroundColor:"#ef4444",borderRadius:4},
-    {label:"Extras",data:stats.map(s=>s.extras),backgroundColor:"#f59e0b",borderRadius:4}
-  ]},options:{...opt,scales:{...opt.scales,y:{beginAtZero:true,ticks:{font:{size:11}}}}}}));
+  const names=stats.map(s=>(s.user.name||"?").split(" ").slice(-1)[0]);
+  const opt={responsive:true,maintainAspectRatio:false,animation:false,scales:{y:{beginAtZero:true,max:100,ticks:{font:{size:11}}},x:{ticks:{font:{size:11}}}},plugins:{legend:{labels:{font:{size:12},boxWidth:12}}}};
+  try{
+    const c1=document.getElementById("chPerf1");
+    if(c1)state.perfCharts.push(new Chart(c1,{type:"bar",data:{labels:names,datasets:[
+      {label:"Asistencia %",data:stats.map(s=>s.asistPct),backgroundColor:"#2563eb",borderRadius:4},
+      {label:"Horas %",data:stats.map(s=>s.hoursPct),backgroundColor:"#10b981",borderRadius:4}
+    ]},options:opt}));
+    const c2=document.getElementById("chPerf2");
+    if(c2)state.perfCharts.push(new Chart(c2,{type:"bar",data:{labels:names,datasets:[
+      {label:"Cumplimiento %",data:stats.map(s=>s.cumplPct),backgroundColor:"#f59e0b",borderRadius:4},
+      {label:"Avance acumulado %",data:stats.map(s=>s.avanceAcumPct),backgroundColor:"#7c3aed",borderRadius:4}
+    ]},options:opt}));
+    const c3=document.getElementById("chPerf3");
+    if(c3)state.perfCharts.push(new Chart(c3,{type:"bar",data:{labels:names,datasets:[
+      {label:"Hechas",data:stats.map(s=>s.doneItems),backgroundColor:"#10b981",borderRadius:4},
+      {label:"Pendientes",data:stats.map(s=>s.totalItems-s.doneItems),backgroundColor:"#ef4444",borderRadius:4},
+      {label:"Extras",data:stats.map(s=>s.extras),backgroundColor:"#f59e0b",borderRadius:4}
+    ]},options:{...opt,scales:{...opt.scales,y:{beginAtZero:true,ticks:{font:{size:11}}}}}}));
+  }catch(e){
+    console.error("Error creando gráficos de desempeño:",e);
+    const c1=document.getElementById("chPerf1");
+    if(c1&&c1.parentElement)c1.parentElement.innerHTML=`<p style="color:var(--red);font-size:12px;padding:10px">⚠️ Error al dibujar el gráfico: ${esc(e.message)}</p>`;
+  }
 }
 
 /* ============ EQUIPO ============ */
