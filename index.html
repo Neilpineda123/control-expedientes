@@ -281,7 +281,7 @@ const ICONS={
 const fb={app:null,auth:null,fs:null};
 const state={user:null,profile:null,tab:"resumen",pendingName:null,charts:[],authMode:"login",
   projFilter:"activo",projSearch:"",
-  pizarraSubtab:"hoy",pizarraFocus:"all",desempenoTab:"personas",
+  pizarraSubtab:"hoy",pizarraFocus:"all",desempenoTab:"personas",perfCharts:[],
   calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),
   dragging:null,_selTpl:null,_obsBaseProject:null,_obsCaps:[]};
 const data={projects:[],tasks:[],comments:[],logs:[],users:[],boardItems:[],holidays:[],dayNotes:[]};
@@ -604,7 +604,7 @@ function renderPizarraHoy(role){
     const byCol={};BOARD_COLS.forEach(c=>byCol[c.id]=[]);
     items.forEach(it=>{(byCol[it.col]||byCol.todo).push(it);});
     const isMe=u.id===state.user.uid;
-    const hasDone=items.some(it=>it.col==="done");
+    const hasActivity=items.length>0;
     const cap=dailyCapacity(todayI);
     const capLabel=cap===4.5?"Sábado · 4.5h":"Jornada · 8h";
     return `<div class="persongroup" style="${!canInteract?"opacity:0.85":""}">
@@ -613,11 +613,9 @@ function renderPizarraHoy(role){
         ${isMe?'<span class="role colaborador">tú</span>':""}
         ${!canInteract?'<span style="font-size:11px;color:var(--muted);margin-left:4px">👁️ solo lectura</span>':""}
         <div style="margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-          ${hasDone
+          ${hasActivity
             ?`<span style="display:inline-flex;align-items:center;gap:5px;background:#d1fae5;color:#065f46;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:500">✅ ${capLabel} registrada</span>`
-            :items.length>0
-              ?`<span style="display:inline-flex;align-items:center;gap:5px;background:#fef3c7;color:#92400e;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:500">🔨 ${capLabel} · en progreso</span>`
-              :`<span style="display:inline-flex;align-items:center;gap:5px;background:#f1f5f9;color:var(--muted);padding:3px 10px;border-radius:999px;font-size:12px;font-weight:500">📋 ${capLabel} · sin actividad</span>`}
+            :`<span style="display:inline-flex;align-items:center;gap:5px;background:#f1f5f9;color:var(--muted);padding:3px 10px;border-radius:999px;font-size:12px;font-weight:500">📋 ${capLabel} · sin actividad</span>`}
           ${canInteract?`<button class="btn primary sm" onclick="openBoardItem(null,'${u.id}','${todayI}')">+ Agregar tarea</button>`:""}
         </div>
       </div>
@@ -836,7 +834,7 @@ function renderResumenSemanal(role){
       const done=items.filter(i=>i.col==="done").length;
       const total=items.length;
       const dayCap=dailyCapacity(iso);
-      const dayWorked=done>0;
+      const dayWorked=total>0;
       if(dayWorked&&!fer)weekAutoHours+=dayCap;
       const dayWeightedSum=items.reduce((a,b)=>a+(b.col==="done"?100:(b.pct||0)),0);
       const dayPct=total?Math.round(dayWeightedSum/total):0;
@@ -849,7 +847,7 @@ function renderResumenSemanal(role){
         content=`<div style="font-family:var(--mono);font-size:16px;font-weight:700;color:${color}">${dayPct}%</div>
           <div class="devbar" style="height:4px;margin:3px 6px 0"><div class="fill" style="width:${dayPct}%;background:${color}"></div></div>
           <div style="font-size:9px;color:var(--muted);margin-top:2px">${done}/${total} completadas</div>
-          ${dayWorked?`<div style="font-size:9px;color:var(--green);font-weight:600;margin-top:1px">✅ ${dayCap}h</div>`:`<div style="font-size:9px;color:var(--amber);margin-top:1px">⏳ pendiente</div>`}`;
+          <div style="font-size:9px;color:var(--green);font-weight:600;margin-top:1px">✅ ${dayCap}h</div>`;
       }
       html+=`<div class="weekcell" style="${fer?"background:#fef9f9":isToday?"background:#eff6ff":""};padding:6px" onclick="openDaySummary('${u.id}','${iso}')">${content}</div>`;
     });
@@ -966,27 +964,25 @@ function viewDesempeno(){
 
   const statsOf=u=>{
     const items=data.boardItems.filter(b=>b.userId===u.id&&b.date>=cutoffISO);
-    const doneByDay={};
-    items.filter(b=>b.col==="done").forEach(b=>{doneByDay[b.date]=true;});
-    const daysWorked=Object.keys(doneByDay).length;
+    const activeDays=new Set(items.map(b=>b.date));
+    const daysWorked=activeDays.size;
     let autoHours=0;
-    Object.keys(doneByDay).forEach(iso=>{if(!isHoliday(iso))autoHours+=dailyCapacity(iso);});
+    activeDays.forEach(iso=>{if(!isHoliday(iso))autoHours+=dailyCapacity(iso);});
     const totalItems=items.length;
     const doneItems=items.filter(b=>b.col==="done").length;
     const planned=items.filter(b=>b.tag!=="extra");
-    const plannedDone=planned.filter(b=>b.col==="done").length;
-    const extras=items.filter(b=>b.tag==="extra").length;
+    const extras=items.filter(b=>b.tag==="extra");
     const blocked=items.filter(b=>b.tag==="bloq").length;
     const tasksAssigned=data.tasks.filter(t=>t.assigneeId===u.id);
     const avgProgress=tasksAssigned.length?Math.round(tasksAssigned.reduce((a,t)=>a+(t.pctReal||0),0)/tasksAssigned.length):0;
-    const weightedSum=items.reduce((a,b)=>a+(b.col==="done"?100:(b.pct||0)),0);
-    const avanceAcumPct=totalItems?Math.round(weightedSum/totalItems):0;
-    return {items,daysWorked,autoHours,totalItems,doneItems,planned:planned.length,plannedDone,extras,blocked,tasksAssigned:tasksAssigned.length,avgProgress,avanceAcumPct,
+    const pctOf=(arr)=>arr.length?Math.round(arr.reduce((a,b)=>a+(b.col==="done"?100:(b.pct||0)),0)/arr.length):null;
+    const avanceAcumPct=pctOf(items)??0;
+    const cumplPct=pctOf(planned)??0;
+    const extrasPct=pctOf(extras);
+    return {items,daysWorked,autoHours,totalItems,doneItems,planned:planned.length,extras:extras.length,blocked,tasksAssigned:tasksAssigned.length,avgProgress,avanceAcumPct,cumplPct,extrasPct,
       asistPct:workDays?Math.round(daysWorked/workDays*100):0,
-      cumplPct:planned.length?Math.round(plannedDone/planned.length*100):0,
       donePct:totalItems?Math.round(doneItems/totalItems*100):0,
-      hoursPct:expectedHours?Math.round(autoHours/expectedHours*100):0,
-      extrasPct:totalItems?Math.round(extras/totalItems*100):0};
+      hoursPct:expectedHours?Math.round(autoHours/expectedHours*100):0};
   };
   const allStats=users.map(u=>({user:u,...statsOf(u)}));
   const barColor=v=>v>=80?"var(--green)":v>=50?"var(--amber)":"var(--red)";
@@ -1009,7 +1005,7 @@ function viewDesempeno(){
               <div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:4px">Cumplimiento</div>
               <div style="font-family:var(--mono);font-size:20px;font-weight:700;color:${barColor(s.cumplPct)}">${s.cumplPct}%</div>
               ${bar(s.cumplPct)}
-              <div style="font-size:10px;color:var(--muted);margin-top:4px">${s.plannedDone} de ${s.planned} planificadas</div>
+              <div style="font-size:10px;color:var(--muted);margin-top:4px">${s.planned} planificadas (30 días)</div>
             </div>
             <div style="padding:10px;background:#f8fafc;border-radius:8px">
               <div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:4px">Productividad</div>
@@ -1021,13 +1017,13 @@ function viewDesempeno(){
               <div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:4px">Avance acum.</div>
               <div style="font-family:var(--mono);font-size:20px;font-weight:700;color:${barColor(s.avanceAcumPct)}">${s.avanceAcumPct}%</div>
               ${bar(s.avanceAcumPct)}
-              <div style="font-size:10px;color:var(--muted);margin-top:4px">incluye % en curso</div>
+              <div style="font-size:10px;color:var(--muted);margin-top:4px">incluye planificadas + extras</div>
             </div>
           </div>
           <div style="margin-top:10px;display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center">
             <div style="padding:6px;background:#f0fdf4;border-radius:6px"><div style="font-family:var(--mono);font-weight:700;font-size:14px;color:${barColor(s.hoursPct)}">${s.hoursPct}%</div><div style="font-size:9px;color:var(--muted)">${s.autoHours}h de ${expectedHours}h</div></div>
             <div style="padding:6px;background:#f0fdf4;border-radius:6px"><div style="font-family:var(--mono);font-weight:700;font-size:14px;color:#047857">${s.daysWorked}</div><div style="font-size:9px;color:var(--muted)">días trabajados</div></div>
-            <div style="padding:6px;background:#fef3c7;border-radius:6px"><div style="font-family:var(--mono);font-weight:700;font-size:14px;color:#92400e">${s.extrasPct}%</div><div style="font-size:9px;color:var(--muted)">Extras (${s.extras})</div></div>
+            <div style="padding:6px;background:#fef3c7;border-radius:6px"><div style="font-family:var(--mono);font-weight:700;font-size:14px;color:${s.extrasPct===null?"var(--muted)":"#92400e"}">${s.extrasPct===null?"—":s.extrasPct+"%"}</div><div style="font-size:9px;color:var(--muted)">Avance extras (${s.extras})</div></div>
             <div style="padding:6px;background:${s.blocked?"#fee2e2":"#f8fafc"};border-radius:6px"><div style="font-family:var(--mono);font-weight:700;font-size:14px;color:${s.blocked?"#b91c1c":"var(--muted)"}">${s.blocked}</div><div style="font-size:9px;color:var(--muted)">Bloqueadas</div></div>
           </div>
           ${s.tasksAssigned?`<div style="margin-top:10px;padding:8px;background:#eff6ff;border-radius:6px;font-size:12px;color:#1e40af">
@@ -1041,21 +1037,21 @@ function viewDesempeno(){
   } else {
     html+=`<div class="grid g2" style="margin-bottom:14px">
       <div class="card"><div class="card-h">📊 Asistencia y Horas por persona</div><div class="card-b"><div style="height:280px"><canvas id="chPerf1"></canvas></div></div></div>
-      <div class="card"><div class="card-h">📊 Cumplimiento vs Productividad</div><div class="card-b"><div style="height:280px"><canvas id="chPerf2"></canvas></div></div></div>
+      <div class="card"><div class="card-h">📊 Cumplimiento vs Avance Acumulado</div><div class="card-b"><div style="height:280px"><canvas id="chPerf2"></canvas></div></div></div>
     </div>
     <div class="grid g2">
       <div class="card"><div class="card-h">📊 Tarjetas completadas por persona</div><div class="card-b"><div style="height:260px"><canvas id="chPerf3"></canvas></div></div></div>
       <div class="card"><div class="card-h">📊 Ranking de rendimiento global</div><div class="card-b">
-        <table><thead><tr><th>#</th><th>Persona</th><th>Asist.</th><th>Cumpl.</th><th>Horas</th><th>Avance</th><th>Puntaje</th></tr></thead><tbody>
-        ${allStats.sort((a,b)=>((b.asistPct+b.cumplPct+b.hoursPct+b.avanceAcumPct)/4)-((a.asistPct+a.cumplPct+a.hoursPct+a.avanceAcumPct)/4)).map((s,i)=>{
-          const score=Math.round((s.asistPct+s.cumplPct+s.hoursPct+s.avanceAcumPct)/4);
+        <table><thead><tr><th>#</th><th>Persona</th><th>Asist.</th><th>Cumpl.</th><th>Horas</th><th>Avance</th><th>Extras</th><th>Puntaje</th></tr></thead><tbody>
+        ${allStats.map(s=>{const factors=[s.asistPct,s.cumplPct,s.hoursPct,s.avanceAcumPct];if(s.extrasPct!==null)factors.push(s.extrasPct);const score=Math.round(factors.reduce((a,b)=>a+b,0)/factors.length);return {...s,score};}).sort((a,b)=>b.score-a.score).map((s,i)=>{
           const medal=i===0?"🥇":i===1?"🥈":i===2?"🥉":"";
           return `<tr><td>${medal||i+1}</td><td><b>${esc(s.user.name)}</b></td>
             <td class="num" style="color:${barColor(s.asistPct)}">${s.asistPct}%</td>
             <td class="num" style="color:${barColor(s.cumplPct)}">${s.cumplPct}%</td>
             <td class="num" style="color:${barColor(s.hoursPct)}">${s.hoursPct}%</td>
             <td class="num" style="color:${barColor(s.avanceAcumPct)}">${s.avanceAcumPct}%</td>
-            <td class="num" style="font-weight:700;color:${barColor(score)}">${score}%</td></tr>`;
+            <td class="num" style="color:${s.extrasPct===null?"var(--muted)":barColor(s.extrasPct)}">${s.extrasPct===null?"—":s.extrasPct+"%"}</td>
+            <td class="num" style="font-weight:700;color:${barColor(s.score)}">${s.score}%</td></tr>`;
         }).join("")}
         </tbody></table>
       </div></div>
@@ -1067,24 +1063,26 @@ function viewDesempeno(){
 
 function initPerfCharts(stats){
   if(typeof Chart==="undefined")return;
+  if(state.tab!=="desempeno"||state.desempenoTab!=="dashboards")return;
+  state.perfCharts.forEach(c=>{try{c.destroy();}catch(e){}});state.perfCharts=[];
   const names=stats.map(s=>s.user.name.split(" ").slice(-1)[0]);
   const opt={responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true,max:100,ticks:{font:{size:11}}},x:{ticks:{font:{size:11}}}},plugins:{legend:{labels:{font:{size:12},boxWidth:12}}}};
   const c1=document.getElementById("chPerf1");
-  if(c1)new Chart(c1,{type:"bar",data:{labels:names,datasets:[
+  if(c1)state.perfCharts.push(new Chart(c1,{type:"bar",data:{labels:names,datasets:[
     {label:"Asistencia %",data:stats.map(s=>s.asistPct),backgroundColor:"#2563eb",borderRadius:4},
     {label:"Horas %",data:stats.map(s=>s.hoursPct),backgroundColor:"#10b981",borderRadius:4}
-  ]},options:opt});
+  ]},options:opt}));
   const c2=document.getElementById("chPerf2");
-  if(c2)new Chart(c2,{type:"bar",data:{labels:names,datasets:[
+  if(c2)state.perfCharts.push(new Chart(c2,{type:"bar",data:{labels:names,datasets:[
     {label:"Cumplimiento %",data:stats.map(s=>s.cumplPct),backgroundColor:"#f59e0b",borderRadius:4},
-    {label:"Productividad %",data:stats.map(s=>s.donePct),backgroundColor:"#7c3aed",borderRadius:4}
-  ]},options:opt});
+    {label:"Avance acumulado %",data:stats.map(s=>s.avanceAcumPct),backgroundColor:"#7c3aed",borderRadius:4}
+  ]},options:opt}));
   const c3=document.getElementById("chPerf3");
-  if(c3)new Chart(c3,{type:"bar",data:{labels:names,datasets:[
+  if(c3)state.perfCharts.push(new Chart(c3,{type:"bar",data:{labels:names,datasets:[
     {label:"Hechas",data:stats.map(s=>s.doneItems),backgroundColor:"#10b981",borderRadius:4},
     {label:"Pendientes",data:stats.map(s=>s.totalItems-s.doneItems),backgroundColor:"#ef4444",borderRadius:4},
     {label:"Extras",data:stats.map(s=>s.extras),backgroundColor:"#f59e0b",borderRadius:4}
-  ]},options:{...opt,scales:{...opt.scales,y:{beginAtZero:true,ticks:{font:{size:11}}}}}});
+  ]},options:{...opt,scales:{...opt.scales,y:{beginAtZero:true,ticks:{font:{size:11}}}}}}));
 }
 
 /* ============ EQUIPO ============ */
@@ -1195,6 +1193,7 @@ function openNewProject(){
             </select>
           </label>
           <div id="np-obs-caps"></div>
+          ${!data.projects.filter(p=>p.template).length?`<p style="font-size:12px;color:var(--amber)">⚠️ No hay expedientes con plantilla cargada todavía. Crea primero un expediente "en curso" con plantilla, o usa "No, es externo".</p>`:""}
         </div>
       </div>
 
@@ -1227,6 +1226,7 @@ function updateNpForm(){
   document.getElementById("np-obs-section").style.display=mode==="observacion"?"block":"none";
   document.getElementById("np-caps-section").style.display="none";
   document.getElementById("np-caps-section").innerHTML="";
+  const obsCaps=document.getElementById("np-obs-caps");if(obsCaps)obsCaps.innerHTML="";
   if(mode==="curso")document.getElementById("np-status").value="activo";
   else document.getElementById("np-status").value="observacion";
 }
@@ -1235,6 +1235,7 @@ function updateObsForm(){
   document.getElementById("np-obs-base").style.display=exists==="si"?"block":"none";
   document.getElementById("np-caps-section").style.display="none";
   document.getElementById("np-caps-section").innerHTML="";
+  const obsCaps=document.getElementById("np-obs-caps");if(obsCaps)obsCaps.innerHTML="";
   if(exists==="no"){
     document.getElementById("np-caps-section").style.display="block";
     document.getElementById("np-caps-section").innerHTML=`<div style="margin-top:6px;border-top:1px solid var(--line);padding-top:12px">
@@ -1286,12 +1287,11 @@ function selectObsBase(){
   const pid=document.getElementById("np-obs-baseproj").value;
   state._obsBaseProject=pid;
   const capsDiv=document.getElementById("np-obs-caps");
-  if(!pid){capsDiv.innerHTML="";document.getElementById("np-caps-section").style.display="none";document.getElementById("np-caps-section").innerHTML="";return;}
+  if(!pid){capsDiv.innerHTML="";return;}
   const p=pById(pid);const t=p.template?TEMPLATES[p.template]:null;
-  if(!t){capsDiv.innerHTML='<p style="color:var(--muted);font-size:12px">Este expediente no tiene plantilla asociada.</p>';return;}
+  if(!t){capsDiv.innerHTML='<p style="color:var(--muted);font-size:12px">Este expediente no tiene una plantilla asociada (fue creado como observación externa). Elige otro o usa "No, es externo".</p>';return;}
   const userOpts=`<option value="">— sin asignar —</option>${data.users.filter(u=>u.role!=="supervisor").map(u=>`<option value="${u.id}">${esc(u.name)}</option>`).join("")}`;
-  document.getElementById("np-caps-section").style.display="block";
-  document.getElementById("np-caps-section").innerHTML=`<div style="margin-top:6px;border-top:1px solid var(--line);padding-top:12px">
+  capsDiv.innerHTML=`<div style="margin-top:6px;border-top:1px solid var(--line);padding-top:12px">
     <b style="font-size:12px;text-transform:uppercase;color:var(--muted)">3️⃣ Marca qué capítulos vienen observados</b>
     <div style="margin-top:8px">
       ${t.chapters.map((c,i)=>`<div class="obscheck">
@@ -1300,6 +1300,7 @@ function selectObsBase(){
         <select id="obscap-user-${i}" style="width:auto;min-width:140px;padding:4px 6px;font-size:12px">${userOpts}</select>
       </div>`).join("")}
     </div>
+    <p style="font-size:11px;color:var(--muted);margin-top:8px">💡 Marca solo los capítulos que vienen con observaciones. El resto no se creará.</p>
   </div>`;
 }
 async function saveNewProject(){
