@@ -283,7 +283,7 @@ const state={user:null,profile:null,tab:"resumen",pendingName:null,charts:[],aut
   projFilter:"activo",projSearch:"",
   pizarraSubtab:"hoy",pizarraFocus:"all",desempenoTab:"personas",perfCharts:[],
   calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),
-  dragging:null,_selTpl:null,_obsBaseProject:null,_obsCaps:[]};
+  dragging:null,_selTpl:null,_obsTpl:null};
 const data={projects:[],tasks:[],comments:[],logs:[],users:[],boardItems:[],holidays:[],dayNotes:[]};
 let unsubs=[];
 
@@ -964,12 +964,13 @@ function viewDesempeno(){
 
   const statsOf=u=>{
     const items=data.boardItems.filter(b=>b.userId===u.id&&b.date>=cutoffISO);
+    const allUserItems=data.boardItems.filter(b=>b.userId===u.id);
     const activeDays=new Set(items.map(b=>b.date));
     const daysWorked=activeDays.size;
     let autoHours=0;
     activeDays.forEach(iso=>{if(!isHoliday(iso))autoHours+=dailyCapacity(iso);});
     const totalItems=items.length;
-    const doneItems=items.filter(b=>b.col==="done").length;
+    const doneItems=items.filter(b=>b.col==="done");
     const planned=items.filter(b=>b.tag!=="extra");
     const extras=items.filter(b=>b.tag==="extra");
     const blocked=items.filter(b=>b.tag==="bloq").length;
@@ -979,9 +980,23 @@ function viewDesempeno(){
     const avanceAcumPct=pctOf(items)??0;
     const cumplPct=pctOf(planned)??0;
     const extrasPct=pctOf(extras);
-    return {items,daysWorked,autoHours,totalItems,doneItems,planned:planned.length,extras:extras.length,blocked,tasksAssigned:tasksAssigned.length,avgProgress,avanceAcumPct,cumplPct,extrasPct,
+    // Tiempo de cierre: días entre creación (date) y completado (updatedAt), para items cerrados en la ventana
+    let closureDaysSum=0,closureCount=0,parallelSum=0;
+    doneItems.forEach(it=>{
+      if(!it.updatedAt)return;
+      const created=new Date(it.date+"T00:00:00");
+      const closed=new Date(it.updatedAt);
+      const days=Math.max(0,Math.round((closed-created)/86400000));
+      closureDaysSum+=days;closureCount++;
+      // carga simultánea: cuántas otras tareas (todo/doing) de esta persona existían en la fecha de creación de esta
+      const parallel=allUserItems.filter(x=>x.id!==it.id&&x.date===it.date&&x.col!=="done").length;
+      parallelSum+=parallel;
+    });
+    const avgClosureDays=closureCount?Math.round((closureDaysSum/closureCount)*10)/10:null;
+    const avgParallel=closureCount?Math.round((parallelSum/closureCount)*10)/10:null;
+    return {items,daysWorked,autoHours,totalItems,doneItems:doneItems.length,planned:planned.length,extras:extras.length,blocked,tasksAssigned:tasksAssigned.length,avgProgress,avanceAcumPct,cumplPct,extrasPct,avgClosureDays,avgParallel,closureCount,
       asistPct:workDays?Math.round(daysWorked/workDays*100):0,
-      donePct:totalItems?Math.round(doneItems/totalItems*100):0,
+      donePct:totalItems?Math.round(doneItems.length/totalItems*100):0,
       hoursPct:expectedHours?Math.round(autoHours/expectedHours*100):0};
   };
   const allStats=users.map(u=>({user:u,...statsOf(u)}));
@@ -1009,9 +1024,13 @@ function viewDesempeno(){
             </div>
             <div style="padding:10px;background:#f8fafc;border-radius:8px">
               <div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:4px">Productividad</div>
-              <div style="font-family:var(--mono);font-size:20px;font-weight:700;color:${barColor(s.donePct)}">${s.donePct}%</div>
-              ${bar(s.donePct)}
-              <div style="font-size:10px;color:var(--muted);margin-top:4px">${s.doneItems} de ${s.totalItems} tarjetas</div>
+              ${s.avgClosureDays===null
+                ?`<div style="font-family:var(--mono);font-size:20px;font-weight:700;color:var(--muted)">—</div>
+                  ${bar(0,"#e2e8f0")}
+                  <div style="font-size:10px;color:var(--muted);margin-top:4px">Sin cierres aún (30 días)</div>`
+                :`<div style="font-family:var(--mono);font-size:20px;font-weight:700;color:${s.avgClosureDays<=1?"var(--green)":s.avgClosureDays<=3?"var(--amber)":"var(--red)"}">${s.avgClosureDays===0?"Mismo día":s.avgClosureDays+"d"}</div>
+                  ${bar(s.avgClosureDays<=1?100:s.avgClosureDays<=3?60:25,s.avgClosureDays<=1?"var(--green)":s.avgClosureDays<=3?"var(--amber)":"var(--red)")}
+                  <div style="font-size:10px;color:var(--muted);margin-top:4px">${s.closureCount} cerradas · prom. ${s.avgParallel} abiertas a la vez</div>`}
             </div>
             <div style="padding:10px;background:#f8fafc;border-radius:8px">
               <div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:4px">Avance acum.</div>
@@ -1056,7 +1075,11 @@ function viewDesempeno(){
         </tbody></table>
       </div></div>
     </div>`;
-    setTimeout(()=>initPerfCharts(allStats),50);
+    state._renderToken=(state._renderToken||0)+1;
+    const myToken=state._renderToken;
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      if(state._renderToken===myToken)initPerfCharts(allStats);
+    }));
   }
   return html;
 }
@@ -1186,14 +1209,19 @@ function openNewProject(){
           </select>
         </label>
         <div id="np-obs-base" style="display:none">
-          <label class="fl"><span class="t">Expediente base</span>
-            <select id="np-obs-baseproj" onchange="selectObsBase()">
+          <label class="fl"><span class="t">Plantilla del expediente observado</span>
+            <select id="np-obs-tpl" onchange="selectObsTpl()">
               <option value="">— elegir —</option>
-              ${data.projects.filter(p=>p.template).map(p=>`<option value="${p.id}">${esc(p.code)} · ${esc(p.name)}</option>`).join("")}
+              ${Object.entries(TEMPLATES).map(([k,t])=>`<option value="${k}">${t.icon} ${t.name}</option>`).join("")}
+            </select>
+          </label>
+          <label class="fl"><span class="t">Expediente relacionado (opcional, para trazabilidad)</span>
+            <select id="np-obs-related">
+              <option value="">— ninguno —</option>
+              ${data.projects.map(p=>`<option value="${p.id}">${esc(p.code)} · ${esc(p.name)}</option>`).join("")}
             </select>
           </label>
           <div id="np-obs-caps"></div>
-          ${!data.projects.filter(p=>p.template).length?`<p style="font-size:12px;color:var(--amber)">⚠️ No hay expedientes con plantilla cargada todavía. Crea primero un expediente "en curso" con plantilla, o usa "No, es externo".</p>`:""}
         </div>
       </div>
 
@@ -1217,7 +1245,7 @@ function openNewProject(){
       <button class="btn line" onclick="closeModal()">Cancelar</button>
     </div>
   </div></div>`;
-  state._selTpl=null;state._obsBaseProject=null;state._obsCaps=[];
+  state._selTpl=null;state._obsTpl=null;
   updateNpForm();
 }
 function updateNpForm(){
@@ -1283,13 +1311,12 @@ function renderCapForm(t){
     <p style="font-size:11px;color:var(--muted);margin:10px 0 0">💡 Pon 100% a los capítulos ya completos/aprobados.</p>
   </div>`;
 }
-function selectObsBase(){
-  const pid=document.getElementById("np-obs-baseproj").value;
-  state._obsBaseProject=pid;
+function selectObsTpl(){
+  const k=document.getElementById("np-obs-tpl").value;
+  state._obsTpl=k;
   const capsDiv=document.getElementById("np-obs-caps");
-  if(!pid){capsDiv.innerHTML="";return;}
-  const p=pById(pid);const t=p.template?TEMPLATES[p.template]:null;
-  if(!t){capsDiv.innerHTML='<p style="color:var(--muted);font-size:12px">Este expediente no tiene una plantilla asociada (fue creado como observación externa). Elige otro o usa "No, es externo".</p>';return;}
+  if(!k){capsDiv.innerHTML="";return;}
+  const t=TEMPLATES[k];
   const userOpts=`<option value="">— sin asignar —</option>${data.users.filter(u=>u.role!=="supervisor").map(u=>`<option value="${u.id}">${esc(u.name)}</option>`).join("")}`;
   capsDiv.innerHTML=`<div style="margin-top:6px;border-top:1px solid var(--line);padding-top:12px">
     <b style="font-size:12px;text-transform:uppercase;color:var(--muted)">3️⃣ Marca qué capítulos vienen observados</b>
@@ -1332,17 +1359,18 @@ async function saveNewProject(){
 
   const exists=document.getElementById("np-obs-exists").value;
   if(exists==="si"){
-    const basePid=state._obsBaseProject;
-    if(!basePid)return alert("Elige el expediente base.");
-    const baseP=pById(basePid);const t=TEMPLATES[baseP.template];
-    payload.template=baseP.template;
-    payload.basedOn=basePid;
+    const tplKey=state._obsTpl;
+    if(!tplKey)return alert("Elige la plantilla del expediente observado.");
+    const t=TEMPLATES[tplKey];
+    payload.template=tplKey;
+    const relatedId=document.getElementById("np-obs-related").value;
+    if(relatedId)payload.relatedProject=relatedId;
     const selected=[];
     t.chapters.forEach((c,i)=>{const ck=document.getElementById(`obscap-${i}`);if(ck&&ck.checked){const userId=document.getElementById(`obscap-user-${i}`).value||null;selected.push({cap:c,userId});}});
     if(!selected.length)return alert("Marca al menos un capítulo observado.");
     try{
       const ref=await fb.fs.collection("projects").add(payload);
-      addLog(`Creó expediente de observaciones ${code} (basado en ${baseP.code})`);
+      addLog(`Creó expediente de observaciones ${code} (plantilla ${t.name})`);
       for(const {cap,userId} of selected){
         const u=userId?uById(userId):null;
         await fb.fs.collection("tasks").add({projectId:ref.id,specialty:cap.name+" (OBS)",capId:cap.id,assigneeId:userId,assigneeName:u?.name||"",pctReal:0,entregables:[],createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),updatedBy:state.profile.name});
@@ -1475,4 +1503,3 @@ function bindEvents(){
 </script>
 </body>
 </html>
-
