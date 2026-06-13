@@ -1063,9 +1063,9 @@ function viewDesempeno(){
           <span>${esc(s.user.name)}</span>
           <span style="font-family:var(--mono);font-weight:600;color:${color}">${s.daysWorked} de ${workDays} días</span>
         </div>
-        <div class="devbar" style="height:12px;position:relative;background:#e2e8f0">
-          <div style="position:absolute;inset:0;background:repeating-linear-gradient(45deg,#cbd5e1 0,#cbd5e1 4px,transparent 4px,transparent 8px);width:100%;border-radius:6px"></div>
-          <div class="fill" style="width:${pct}%;background:${color};position:relative;z-index:1"></div>
+        <div class="devbar" style="height:12px;position:relative;background:#e2e8f0;overflow:hidden">
+          <div style="position:absolute;inset:0;background:repeating-linear-gradient(45deg,#cbd5e1 0,#cbd5e1 4px,transparent 4px,transparent 8px)"></div>
+          <div class="fill" style="position:absolute;left:0;top:0;bottom:0;height:100%;width:${pct}%;background:${color};z-index:1;border-radius:999px"></div>
         </div>
         <div style="font-size:10px;color:var(--muted);margin-top:2px">${s.autoHours}h de ${expectedHours}h esperadas</div>
       </div>`;
@@ -1571,3 +1571,4 @@ function bindEvents(){
 </script>
 </body>
 </html>
+
