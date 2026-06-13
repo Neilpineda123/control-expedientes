@@ -1054,25 +1054,45 @@ function viewDesempeno(){
     });
     html+=`</div>`;
   } else {
-    const hbar=(label,pct,color,extra)=>`<div style="margin-bottom:8px">
-      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:2px"><span>${esc(label)}</span><span style="font-family:var(--mono);font-weight:600;color:${color}">${pct}%${extra?` <span style="color:var(--muted);font-weight:400">${extra}</span>`:""}</span></div>
-      <div class="devbar" style="height:10px"><div class="fill" style="width:${Math.min(pct,100)}%;background:${color}"></div></div>
-    </div>`;
+    // Panel 1: Asistencia real vs esperada (barra doble)
+    const attendanceBar=(s)=>{
+      const pct=workDays?Math.min(Math.round(s.daysWorked/workDays*100),100):0;
+      const color=pct>=80?"#10b981":pct>=50?"#f59e0b":"#ef4444";
+      return `<div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+          <span>${esc(s.user.name)}</span>
+          <span style="font-family:var(--mono);font-weight:600;color:${color}">${s.daysWorked} de ${workDays} días</span>
+        </div>
+        <div class="devbar" style="height:12px;position:relative;background:#e2e8f0">
+          <div style="position:absolute;inset:0;background:repeating-linear-gradient(45deg,#cbd5e1 0,#cbd5e1 4px,transparent 4px,transparent 8px);width:100%;border-radius:6px"></div>
+          <div class="fill" style="width:${pct}%;background:${color};position:relative;z-index:1"></div>
+        </div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px">${s.autoHours}h de ${expectedHours}h esperadas</div>
+      </div>`;
+    };
 
-    // Panel 2: scatter Cumplimiento (X) vs Avance Acumulado (Y)
+    // Panel 2: bubble chart Cumplimiento (X) vs Avance Acumulado (Y), tamaño = total de tareas
     const SW=600,SH=380,PAD=44;
     const sx=v=>PAD+(v/100)*(SW-2*PAD);
     const sy=v=>(SH-PAD)-(v/100)*(SH-2*PAD);
     const midX=sx(50),midY=sy(50);
-    const scatterPoints=allStats.map(s=>{
-      const x=sx(s.cumplPct),y=sy(s.avanceAcumPct);
+    const maxItems=Math.max(1,...allStats.map(s=>s.totalItems));
+    const positioned=allStats.map(s=>({s,x:sx(s.cumplPct),y:sy(s.avanceAcumPct)}));
+    const labelOffsets=positioned.map((p,i)=>{
+      let stack=0;
+      positioned.forEach((q,j)=>{if(j<i&&Math.abs(q.x-p.x)<28&&Math.abs(q.y-p.y)<14)stack++;});
+      return stack;
+    });
+    const scatterPoints=positioned.map(({s,x,y},i)=>{
       const good=s.cumplPct>=50&&s.avanceAcumPct>=50;
       const bad=s.cumplPct<50&&s.avanceAcumPct<50;
       const color=good?"#10b981":bad?"#ef4444":"#f59e0b";
       const label=(s.user.name||"").split(" ")[0];
+      const r=8+(s.totalItems/maxItems)*16;
+      const ly=y-r-4-(labelOffsets[i]*13);
       return `<g>
-        <circle cx="${x}" cy="${y}" r="7" fill="${color}" stroke="#fff" stroke-width="1.5"/>
-        <text x="${x}" y="${y-11}" font-size="11" text-anchor="middle" fill="var(--ink)" font-weight="600">${esc(label)}</text>
+        <circle cx="${x}" cy="${y}" r="${r}" fill="${color}" fill-opacity="0.55" stroke="${color}" stroke-width="1.5"/>
+        <text x="${x}" y="${ly}" font-size="11" text-anchor="middle" fill="var(--ink)" font-weight="600">${esc(label)}</text>
       </g>`;
     }).join("");
     const scatterSvg=`<svg viewBox="0 0 ${SW} ${SH}" style="width:100%;height:auto;max-height:340px">
@@ -1121,12 +1141,12 @@ function viewDesempeno(){
     };
 
     html+=`<div class="grid g2" style="margin-bottom:14px">
-      <div class="card"><div class="card-h">📊 Asistencia y Horas por persona</div><div class="card-b">
-        <div style="display:flex;gap:14px;font-size:11px;color:var(--muted);margin-bottom:8px"><span>🔵 Asistencia</span><span>🟢 Horas</span></div>
-        ${allStats.map(s=>hbar(s.user.name,s.asistPct,"#2563eb")+hbar("",s.hoursPct,"#10b981")).join("<div style='height:6px'></div>")}
+      <div class="card"><div class="card-h">📊 Asistencia real vs esperada</div><div class="card-b">
+        <div style="display:flex;gap:14px;font-size:11px;color:var(--muted);margin-bottom:10px"><span>▓ días registrados</span><span>▦ días hábiles del periodo</span></div>
+        ${allStats.map(attendanceBar).join("")}
       </div></div>
       <div class="card"><div class="card-h">📊 Cumplimiento vs Avance Acumulado</div><div class="card-b">
-        <div style="display:flex;gap:14px;font-size:11px;color:var(--muted);margin-bottom:8px"><span>🟢 ambos altos</span><span>🟡 mixto</span><span>🔴 ambos bajos</span></div>
+        <div style="display:flex;gap:14px;font-size:11px;color:var(--muted);margin-bottom:8px"><span>🟢 ambos altos</span><span>🟡 mixto</span><span>🔴 ambos bajos</span><span style="margin-left:auto;color:var(--muted)">tamaño = nº de tarjetas</span></div>
         ${scatterSvg}
       </div></div>
     </div>
