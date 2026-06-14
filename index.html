@@ -831,7 +831,11 @@ async function dropBoardItem(col,ownerId){
   if(!state.dragging)return;
   const it=data.boardItems.find(x=>x.id===state.dragging);if(!it){state.dragging=null;return;}
   if(it.userId!==state.user.uid&&state.profile.role!=="jefe"){alert("Solo el dueño o el jefe pueden mover esta tarjeta.");state.dragging=null;return;}
-  try{await fb.fs.collection("board_items").doc(it.id).update({col,updatedAt:new Date().toISOString()});}catch(e){alert("Error: "+e.message);}
+  try{
+    const pct=col==="done"?100:(it.pct||0);
+    await fb.fs.collection("board_items").doc(it.id).update({col,pct,updatedAt:new Date().toISOString()});
+    if(it.taskId)await syncTaskFromBoardItem(it.taskId,pct,it.subItemId||null);
+  }catch(e){alert("Error: "+e.message);}
   state.dragging=null;
 }
 
@@ -886,9 +890,31 @@ function openBoardItem(id,userId,date,askDone){
     </div>
   </div></div>`;
 }
-async function syncTaskFromBoardItem(taskId,pct){
+async function syncTaskFromBoardItem(taskId,pct,subItemId){
   if(!taskId)return;
-  try{await fb.fs.collection("tasks").doc(taskId).update({pctReal:pct,updatedAt:new Date().toISOString(),updatedBy:state.profile.name});}catch(e){/*silencioso*/}
+  try{
+    const t=data.tasks.find(x=>x.id===taskId);
+    if(!t)return;
+    const subs=t.subItems||[];
+    if(subItemId&&subs.length){
+      // Actualizar el sub-inciso específico y recalcular el global
+      const newSubs=subs.map((s,i)=>{
+        const sid=`${taskId}_${i}`;
+        if(sid===subItemId)return {...s,pctReal:pct};
+        return s;
+      });
+      const globalPct=Math.round(newSubs.reduce((a,s)=>a+(s.pctReal||0),0)/newSubs.length);
+      await fb.fs.collection("tasks").doc(taskId).update({
+        subItems:newSubs,pctReal:globalPct,
+        updatedAt:new Date().toISOString(),updatedBy:state.profile.name
+      });
+    } else {
+      // Sin sub-incisos: actualizar directamente el capítulo
+      await fb.fs.collection("tasks").doc(taskId).update({
+        pctReal:pct,updatedAt:new Date().toISOString(),updatedBy:state.profile.name
+      });
+    }
+  }catch(e){/*silencioso*/}
 }
 async function saveBoardItem(id,userId,date){
   const text=val("bi-text");if(!text)return alert("Escribe una descripción.");
@@ -902,7 +928,7 @@ async function saveBoardItem(id,userId,date){
   try{
     if(id)await fb.fs.collection("board_items").doc(id).update({text,projectId,tag,pct,link,updatedAt:new Date().toISOString()});
     else await fb.fs.collection("board_items").add({userId,userName:u?.name||"",date,text,projectId,tag,pct,link,col:"todo",createdBy:state.profile.name,createdAt:new Date().toISOString()});
-    if(existing?.taskId)await syncTaskFromBoardItem(existing.taskId,pct);
+    if(existing?.taskId)await syncTaskFromBoardItem(existing.taskId,pct,existing.subItemId||null);
     addLog(`${id?"Editó":"Creó"} tarjeta de ${u?.name}: "${text.slice(0,40)}"`);
     closeModal();
   }catch(e){alert("Error: "+e.message);}
@@ -917,7 +943,7 @@ async function moveBoardItem(id,col){
     const link=document.getElementById("bi-link");if(link)payload.link=link.value.trim();
     const pctEl=document.getElementById("bi-pct");if(pctEl&&col!=="done"&&it.col!=="done")payload.pct=Number(pctEl.value)||0;
     await fb.fs.collection("board_items").doc(id).update(payload);
-    if(it.taskId)await syncTaskFromBoardItem(it.taskId,payload.pct!==undefined?payload.pct:it.pct||0);
+    if(it.taskId)await syncTaskFromBoardItem(it.taskId,payload.pct!==undefined?payload.pct:it.pct||0,it.subItemId||null);
     addLog(`${col==="done"?"Completó":col==="doing"&&it.col==="done"?"Reabrió":"Movió"} la tarea "${(it.text||"").slice(0,40)}"`);
     closeModal();
   }catch(e){alert("Error: "+e.message);}
