@@ -334,12 +334,22 @@ async function ensureProfile(user){
   const snap=await ref.get();
   const isJefe=(JEFE_EMAILS||[]).map(e=>(e||"").toLowerCase()).includes((user.email||"").toLowerCase());
   if(!snap.exists){
-    const prof={name:state.pendingName||(user.email||"Usuario").split("@")[0],email:user.email||"",role:isJefe?"jefe":"colaborador",area:""};
+    const prof={name:state.pendingName||(user.email||"Usuario").split("@")[0],email:user.email||"",role:isJefe?"jefe":"colaborador",status:isJefe?"aprobado":"pendiente",area:""};
     await ref.set(prof);state.pendingName=null;return {id:user.uid,...prof};
   }
   const prof=snap.data();
-  if(isJefe&&prof.role!=="jefe"){await ref.update({role:"jefe"});prof.role="jefe";}
+  if(isJefe&&prof.role!=="jefe"){await ref.update({role:"jefe",status:"aprobado"});prof.role="jefe";prof.status="aprobado";}
+  if(!prof.status)await ref.update({status:"aprobado"});
   return {id:user.uid,...prof};
+}
+async function aprobarUsuario(uid){
+  await fb.fs.collection("users").doc(uid).update({status:"aprobado"});
+  const u=uById(uid);addLog(`Aprobó acceso de ${u?.name||uid}`);
+}
+async function rechazarUsuario(uid){
+  if(!confirm("¿Rechazar y eliminar este acceso? El usuario no podrá entrar al sistema."))return;
+  await fb.fs.collection("users").doc(uid).update({status:"rechazado"});
+  const u=uById(uid);addLog(`Rechazó acceso de ${u?.name||uid}`);
 }
 async function doLogin(){const em=val("li-email"),pw=val("li-pass");if(!em||!pw)return showErr("Escribe correo y contraseña.");try{await fb.auth.signInWithEmailAndPassword(em,pw);}catch(e){showErr(traduce(e.code));}}
 async function doRegister(){const nm=val("rg-name"),em=val("rg-email"),pw=val("rg-pass");if(!nm||!em||!pw)return showErr("Completa nombre, correo y contraseña.");if(pw.length<6)return showErr("Mínimo 6 caracteres.");state.pendingName=nm;try{await fb.auth.createUserWithEmailAndPassword(em,pw);}catch(e){showErr(traduce(e.code));}}
@@ -373,6 +383,26 @@ function ph(t,s,blue){return `<div class="ph ${blue?"blue":""}"><h2>${esc(t)}</h
 function render(){
   if(!state.user)return renderLogin();
   if(!state.profile)return;
+  const status=state.profile.status||"aprobado";
+  if(status==="pendiente"){
+    return setApp(`<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--paper)">
+      <div class="card" style="max-width:420px;width:90%;text-align:center;padding:32px">
+        <div style="font-size:48px;margin-bottom:12px">⏳</div>
+        <h2 style="margin:0 0 8px">Acceso pendiente de aprobación</h2>
+        <p style="color:var(--muted);margin:0 0 20px">Tu cuenta fue creada pero necesita ser aprobada por el jefe de proyecto antes de que puedas ingresar. Te avisarán cuando esté lista.</p>
+        <p style="font-size:12px;color:var(--muted)">Sesión iniciada como <b>${esc(state.profile.email)}</b></p>
+        <button class="btn line" onclick="doLogout()" style="margin-top:16px">Cerrar sesión</button>
+      </div></div>`);
+  }
+  if(status==="rechazado"){
+    return setApp(`<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--paper)">
+      <div class="card" style="max-width:420px;width:90%;text-align:center;padding:32px">
+        <div style="font-size:48px;margin-bottom:12px">🚫</div>
+        <h2 style="margin:0 0 8px">Acceso denegado</h2>
+        <p style="color:var(--muted);margin:0 0 20px">Tu solicitud de acceso fue rechazada. Comunícate con el jefe de proyecto si crees que es un error.</p>
+        <button class="btn line" onclick="doLogout()" style="margin-top:16px">Cerrar sesión</button>
+      </div></div>`);
+  }
   const role=state.profile.role,nav=NAV[role]||NAV.colaborador;
   const navBtns=nav.map(([id,lbl,ic])=>`<button data-act="tab" data-id="${id}" class="${state.tab===id?"active":""}">${ICONS[ic]}${lbl}</button>`).join("");
   setApp(`
@@ -607,6 +637,47 @@ function renderPizarraHoy(role){
     const hasActivity=items.length>0;
     const cap=dailyCapacity(todayI);
     const capLabel=cap===4.5?"Sábado · 4.5h":"Jornada · 8h";
+
+    // Panel "Mis frentes asignados" — solo para la propia persona
+    let frentesHtml="";
+    if(canInteract&&isMe){
+      const myTasks=data.tasks.filter(t=>t.assigneeId===u.id);
+      const activeTasks=myTasks.filter(t=>{
+        const p=pById(t.projectId);
+        return p&&p.status!=="cerrado"&&(t.pctReal||0)<100;
+      });
+      if(activeTasks.length){
+        const taskItems=activeTasks.map(t=>{
+          const p=pById(t.projectId)||{};
+          const already=items.find(b=>b.taskId===t.id&&b.col!=="done");
+          const done=items.find(b=>b.taskId===t.id&&b.col==="done");
+          const pct=t.pctReal||0;
+          const pctColor=pct>=80?"var(--green)":pct>=40?"var(--amber)":"var(--muted)";
+          const tplIcon=TEMPLATES[p.template]?.icon||"📁";
+          return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)">
+            <span style="font-size:16px">${tplIcon}</span>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(t.specialty)}</div>
+              <div style="font-size:11px;color:var(--muted)">${esc(p.code||"")} · ${esc(p.name||"")}</div>
+              <div style="display:flex;align-items:center;gap:6px;margin-top:3px">
+                <div class="devbar" style="width:80px;height:5px"><div class="fill" style="width:${pct}%;background:${pctColor}"></div></div>
+                <span style="font-family:var(--mono);font-size:11px;color:${pctColor}">${pct}%</span>
+              </div>
+            </div>
+            ${done
+              ?`<span style="font-size:11px;color:var(--green);font-weight:500;white-space:nowrap">✅ Completado hoy</span>`
+              :already
+                ?`<span style="font-size:11px;color:var(--accent);font-weight:500;white-space:nowrap">🔨 Ya en pizarra</span>`
+                :`<button class="btn line sm" onclick="activarFrenteHoy('${t.id}')" style="white-space:nowrap">Activar hoy →</button>`}
+          </div>`;
+        }).join("");
+        frentesHtml=`<div style="background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-bottom:12px">
+          <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:6px">📂 Mis frentes asignados (${activeTasks.length})</div>
+          ${taskItems}
+        </div>`;
+      }
+    }
+
     return `<div class="persongroup" style="${!canInteract?"opacity:0.85":""}">
       <div class="persongroup-h">
         <div class="avatar sm">${initials(u.name)}</div><b>${esc(u.name)}</b>
@@ -620,6 +691,7 @@ function renderPizarraHoy(role){
         </div>
       </div>
       <div class="persongroup-b">
+        ${frentesHtml}
         <div class="board">
           ${BOARD_COLS.map(col=>`<div class="bcol" ${canInteract?`ondragover="event.preventDefault()" ondrop="dropBoardItem('${col.id}','${u.id}')"`:""}">
             <div class="bcol-h">${col.emoji} ${col.name} <span class="ct">${byCol[col.id].length}</span></div>
@@ -742,6 +814,10 @@ function openBoardItem(id,userId,date,askDone){
     </div>
   </div></div>`;
 }
+async function syncTaskFromBoardItem(taskId,pct){
+  if(!taskId)return;
+  try{await fb.fs.collection("tasks").doc(taskId).update({pctReal:pct,updatedAt:new Date().toISOString(),updatedBy:state.profile.name});}catch(e){/*silencioso*/}
+}
 async function saveBoardItem(id,userId,date){
   const text=val("bi-text");if(!text)return alert("Escribe una descripción.");
   const projectId=document.getElementById("bi-proj").value||null;
@@ -750,9 +826,11 @@ async function saveBoardItem(id,userId,date){
   const pct=pctEl?Number(pctEl.value)||0:0;
   const link=val("bi-link");
   const u=uById(userId);
+  const existing=id?data.boardItems.find(x=>x.id===id):null;
   try{
     if(id)await fb.fs.collection("board_items").doc(id).update({text,projectId,tag,pct,link,updatedAt:new Date().toISOString()});
     else await fb.fs.collection("board_items").add({userId,userName:u?.name||"",date,text,projectId,tag,pct,link,col:"todo",createdBy:state.profile.name,createdAt:new Date().toISOString()});
+    if(existing?.taskId)await syncTaskFromBoardItem(existing.taskId,pct);
     addLog(`${id?"Editó":"Creó"} tarjeta de ${u?.name}: "${text.slice(0,40)}"`);
     closeModal();
   }catch(e){alert("Error: "+e.message);}
@@ -767,6 +845,7 @@ async function moveBoardItem(id,col){
     const link=document.getElementById("bi-link");if(link)payload.link=link.value.trim();
     const pctEl=document.getElementById("bi-pct");if(pctEl&&col!=="done"&&it.col!=="done")payload.pct=Number(pctEl.value)||0;
     await fb.fs.collection("board_items").doc(id).update(payload);
+    if(it.taskId)await syncTaskFromBoardItem(it.taskId,payload.pct!==undefined?payload.pct:it.pct||0);
     addLog(`${col==="done"?"Completó":col==="doing"&&it.col==="done"?"Reabrió":"Movió"} la tarea "${(it.text||"").slice(0,40)}"`);
     closeModal();
   }catch(e){alert("Error: "+e.message);}
@@ -1179,9 +1258,25 @@ function viewDesempeno(){
 /* ============ EQUIPO ============ */
 function viewEquipo(){
   const groups=[["jefe","Jefatura"],["supervisor","Supervisores"],["colaborador","Colaboradores"]];
-  let html=ph("Gestión de Equipo","Asigna roles a cada miembro registrado.");
+  let html=ph("Gestión de Equipo","Asigna roles y aprueba nuevos miembros.");
+  const pending=data.users.filter(u=>u.status==="pendiente");
+  const rejected=data.users.filter(u=>u.status==="rechazado");
+  if(pending.length){
+    html+=`<div class="card" style="margin-bottom:14px;border-color:var(--amber)">
+      <div class="card-h" style="background:#fffbeb">⏳ Pendientes de aprobación (${pending.length})</div>
+      <div>${pending.map(u=>`<div style="display:flex;gap:10px;align-items:center;padding:10px 16px;border-top:1px solid var(--line);flex-wrap:wrap">
+        <div class="avatar" style="background:#92400e">${initials(u.name)}</div>
+        <div style="flex:1;min-width:140px"><div style="font-weight:500">${esc(u.name)}</div><div style="font-size:12px;color:var(--muted)">${esc(u.email||"")}</div></div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <select id="role-sel-${u.id}" style="width:auto;padding:5px 8px;font-size:12px"><option value="colaborador">Colaborador</option><option value="supervisor">Supervisor</option><option value="jefe">Jefe</option></select>
+          <button class="btn primary sm" onclick="aprobarConRol('${u.id}')">✅ Aprobar</button>
+          <button class="btn line sm" style="color:var(--red)" onclick="rechazarUsuario('${u.id}')">🚫 Rechazar</button>
+        </div>
+      </div>`).join("")}</div>
+    </div>`;
+  }
   groups.forEach(([r,title])=>{
-    const list=data.users.filter(u=>u.role===r);
+    const list=data.users.filter(u=>u.role===r&&u.status!=="pendiente"&&u.status!=="rechazado");
     html+=`<div class="card" style="margin-bottom:14px"><div class="card-h">${title} (${list.length})</div>
       <div>${list.map(u=>`<div style="display:flex;gap:10px;align-items:center;padding:10px 16px;border-top:1px solid var(--line);flex-wrap:wrap">
         <div class="avatar" style="background:var(--ink2)">${initials(u.name)}</div>
@@ -1189,7 +1284,23 @@ function viewEquipo(){
         <select onchange="setRole('${u.id}',this.value)" style="width:auto;padding:5px 8px;font-size:12px"><option value="colaborador" ${u.role==="colaborador"?"selected":""}>Colaborador</option><option value="supervisor" ${u.role==="supervisor"?"selected":""}>Supervisor</option><option value="jefe" ${u.role==="jefe"?"selected":""}>Jefe</option></select>
       </div>`).join("")||`<div class="card-b" style="color:var(--muted);font-size:13px">Sin miembros.</div>`}</div></div>`;
   });
+  if(rejected.length){
+    html+=`<div class="card" style="margin-bottom:14px;border-color:var(--red)">
+      <div class="card-h" style="background:#fef2f2">🚫 Accesos rechazados (${rejected.length})</div>
+      <div>${rejected.map(u=>`<div style="display:flex;gap:10px;align-items:center;padding:10px 16px;border-top:1px solid var(--line);flex-wrap:wrap">
+        <div class="avatar" style="background:#b91c1c">${initials(u.name)}</div>
+        <div style="flex:1;min-width:140px"><div style="font-weight:500">${esc(u.name)}</div><div style="font-size:12px;color:var(--muted)">${esc(u.email||"")}</div></div>
+        <button class="btn line sm" onclick="aprobarConRol('${u.id}')">Aprobar de todas formas</button>
+      </div>`).join("")}</div>
+    </div>`;
+  }
   return html;
+}
+async function aprobarConRol(uid){
+  const selEl=document.getElementById("role-sel-"+uid);
+  const role=selEl?selEl.value:"colaborador";
+  await fb.fs.collection("users").doc(uid).update({status:"aprobado",role});
+  const u=uById(uid);addLog(`Aprobó acceso de ${u?.name||uid} como ${ROLE_LABEL[role]}`);
 }
 
 /* ============ BITÁCORA ============ */
@@ -1207,6 +1318,9 @@ function openTask(tid){
   const esp=elapsedPct(p),st=STATUS[statusFor(t.pctReal||0,esp)];
   const canEdit=t.assigneeId===state.user.uid||state.profile.role==="jefe";
   const canComment=state.profile.role==="jefe"||state.profile.role==="supervisor"||t.assigneeId===state.user.uid;
+  const todayI=todayISO();
+  const existingBoardItem=t.assigneeId?data.boardItems.find(b=>b.userId===t.assigneeId&&b.date===todayI&&b.taskId===tid&&b.col!=="done"):null;
+  const canRegister=t.assigneeId===state.user.uid;
   document.getElementById("modal").innerHTML=`<div class="modal"><div class="modal-c">
     <div class="modal-h"><h3>${esc(t.specialty)}</h3><span class="codetag">${esc(p.code||"")}</span><button class="x" onclick="closeModal()">✕</button></div>
     <div class="modal-b">
@@ -1216,6 +1330,11 @@ function openTask(tid){
       ${canEdit?`<div style="margin-top:14px"><label class="t" style="display:block;font-size:12px;margin-bottom:4px">Avance</label>
         <input type="range" id="mtask-pct" min="0" max="100" step="5" value="${t.pctReal||0}" oninput="document.getElementById('mtask-lbl').textContent=this.value+'%'"/>
         <div style="text-align:right;font-family:var(--mono);font-weight:600" id="mtask-lbl">${t.pctReal||0}%</div></div>`:""}
+      ${canRegister?`<div style="margin-top:12px;padding:10px;background:#eff6ff;border-radius:8px">
+        ${existingBoardItem
+          ?`<p style="margin:0 0 8px;font-size:12px;color:#1e40af">📋 Ya tienes una tarjeta de hoy para este frente.</p><button class="btn dark sm" onclick="openBoardItem('${existingBoardItem.id}','${existingBoardItem.userId}','${existingBoardItem.date}')">Ver en mi pizarra de hoy</button>`
+          :`<p style="margin:0 0 8px;font-size:12px;color:#1e40af">📋 Registra que hoy trabajaste en este frente — esto cuenta para tu jornada y desempeño.</p><button class="btn dark sm" onclick="registerTaskInBoard('${tid}')">+ Registrar en mi pizarra de hoy</button>`}
+      </div>`:""}
       <label class="fl" style="margin-top:10px"><span class="t">🔗 Enlace al trabajo</span>
         <input id="mtask-link" value="${esc(t.link||"")}" placeholder="Pega el link aquí..." ${!canEdit?"readonly":""}/></label>
       ${p.driveLink?`<div style="font-size:12px;color:var(--accent);margin-top:-6px;margin-bottom:10px">📁 Drive del expediente: <a href="${esc(p.driveLink)}" target="_blank">abrir carpeta raíz</a></div>`:""}
@@ -1231,6 +1350,38 @@ function openTask(tid){
       <button class="btn line" onclick="closeModal()">Cerrar</button>
     </div>
   </div></div>`;
+}
+async function activarFrenteHoy(tid){
+  const t=data.tasks.find(x=>x.id===tid);if(!t)return;
+  const p=pById(t.projectId)||{};
+  const todayI=todayISO();
+  const already=data.boardItems.find(b=>b.taskId===tid&&b.userId===state.user.uid&&b.date===todayI&&b.col!=="done");
+  if(already)return;
+  try{
+    await fb.fs.collection("board_items").add({
+      userId:state.user.uid,userName:state.profile.name,date:todayI,
+      text:`${t.specialty}${p.code?` (${p.code})`:""}`,
+      projectId:t.projectId||null,taskId:tid,tag:"plan",
+      pct:t.pctReal||0,link:t.link||"",col:"doing",
+      createdBy:state.profile.name,createdAt:new Date().toISOString()
+    });
+    addLog(`Activó en pizarra: ${t.specialty} (${p.code||""})`);
+  }catch(e){alert("Error: "+e.message);}
+}
+async function registerTaskInBoard(tid){
+  const t=data.tasks.find(x=>x.id===tid);if(!t)return;
+  const p=pById(t.projectId)||{};
+  const todayI=todayISO();
+  try{
+    const ref=await fb.fs.collection("board_items").add({
+      userId:state.user.uid,userName:state.profile.name,date:todayI,
+      text:`${t.specialty}${p.code?` (${p.code})`:""}`,
+      projectId:t.projectId||null,taskId:tid,tag:"plan",pct:t.pctReal||0,link:t.link||"",col:"doing",
+      createdBy:state.profile.name,createdAt:new Date().toISOString()
+    });
+    addLog(`Registró en pizarra: ${t.specialty} (${p.code||""})`);
+    openBoardItem(ref.id,state.user.uid,todayI);
+  }catch(e){alert("Error: "+e.message);}
 }
 async function saveTaskModal(tid){
   const t=data.tasks.find(x=>x.id===tid);if(!t)return;
