@@ -279,7 +279,7 @@ const ICONS={
 </script>
 <script>
 const fb={app:null,auth:null,fs:null};
-const state={user:null,profile:null,tab:"resumen",pendingName:null,charts:[],authMode:"login",
+const state={user:null,profile:null,tab:"resumen",pendingName:null,authMode:"login",
   projFilter:"activo",projSearch:"",
   pizarraSubtab:"hoy",pizarraFocus:"all",desempenoTab:"personas",
   calMonth:new Date().getMonth(),calYear:new Date().getFullYear(),
@@ -429,14 +429,14 @@ function render(){
     </div>
   </div>`);
   const v=document.getElementById("view");
-  if(state.tab==="resumen"){v.innerHTML=viewResumen();initCharts();}
+  if(state.tab==="resumen"){v.innerHTML=viewResumen();}
   else if(state.tab==="proyectos")v.innerHTML=viewProyectos();
   else if(state.tab==="pizarra")v.innerHTML=viewPizarra();
   else if(state.tab==="calendario")v.innerHTML=viewCalendario();
   else if(state.tab==="desempeno")v.innerHTML=viewDesempeno();
   else if(state.tab==="equipo"&&role==="jefe")v.innerHTML=viewEquipo();
   else if(state.tab==="bitacora"&&role==="jefe")v.innerHTML=viewBitacora();
-  else{v.innerHTML=viewResumen();initCharts();}
+  else{v.innerHTML=viewResumen();}
 }
 
 function renderLogin(){
@@ -475,43 +475,82 @@ function viewResumen(){
   const avg=activeTasks.length?Math.round(activeTasks.reduce((a,t)=>a+(t.pctReal||0),0)/activeTasks.length):0;
   const todayI=todayISO();
   const myToday=data.boardItems.filter(b=>b.userId===state.user.uid&&b.date===todayI);
-  const sinReg=data.users.filter(u=>!data.boardItems.some(b=>b.userId===u.id&&b.date===todayI&&b.col==="done")).length;
+  const sinReg=data.users.filter(u=>!data.boardItems.some(b=>b.userId===u.id&&b.date===todayI)).length;
   if(!P.length){
     return ph("Resumen Ejecutivo","Aún no hay expedientes cargados.",true)+
       `<div class="card"><div class="card-b" style="text-align:center"><p style="color:var(--muted)">No hay datos todavía.${state.profile.role==="jefe"?" Crea tu primer expediente en <b>Proyectos</b>.":""}</p></div></div>`;
   }
   const kpi=(ic,tone,lbl,v,sub)=>`<div class="kpi"><div class="ic" style="background:${tone[0]};color:${tone[1]}">${ICONS[ic]}</div><div class="lbl">${lbl}</div><div class="val">${v}</div><div class="sub">${sub}</div></div>`;
+
+  // Gráfico 1: barras horizontales Avance real vs esperado por expediente (SVG puro)
+  const allP=P.filter(p=>p.status==="activo"||p.status==="observacion"||!p.status);
+  const projRows=allP.map(p=>{
+    const pt=T.filter(t=>t.projectId===p.id);
+    const real=pt.length?Math.round(pt.reduce((a,t)=>a+(t.pctReal||0),0)/pt.length):0;
+    const esp=elapsedPct(p);
+    return {name:p.code,label:p.name,real,esp};
+  });
+  const barChart=projRows.length?projRows.map(r=>{
+    const realColor=r.real>=r.esp?"#10b981":r.real>=r.esp*0.7?"#f59e0b":"#ef4444";
+    return `<div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+        <span style="font-weight:600">${esc(r.name)}</span>
+        <span style="color:var(--muted);font-size:11px">${esc(r.label.slice(0,30))}</span>
+      </div>
+      <div style="position:relative;height:20px;background:#e2e8f0;border-radius:6px;overflow:hidden">
+        <div style="position:absolute;left:0;top:0;bottom:0;width:${Math.min(r.esp,100)}%;background:#cbd5e1;border-radius:6px"></div>
+        <div style="position:absolute;left:0;top:3px;bottom:3px;width:${Math.min(r.real,100)}%;background:${realColor};border-radius:4px;z-index:1"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;margin-top:2px">
+        <span style="color:${realColor};font-family:var(--mono);font-weight:600">Real ${r.real}%</span>
+        <span style="color:var(--muted)">Esp. ${r.esp}%</span>
+      </div>
+    </div>`;
+  }).join(""):`<p style="color:var(--muted);font-size:13px">Sin expedientes activos.</p>`;
+
+  // Gráfico 2: donut SVG para estado de frentes
+  const total=counts.verde+counts.amarillo+counts.rojo||1;
+  const R=70,CX=90,CY=90,circ=2*Math.PI*R;
+  const seg=(val,color,offset)=>{
+    const len=(val/total)*circ;
+    return val>0?`<circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="${color}" stroke-width="22"
+      stroke-dasharray="${len} ${circ-len}" stroke-dashoffset="${circ-offset}" transform="rotate(-90 ${CX} ${CY})"/>`:"";
+  };
+  let off=0;
+  const d1=seg(counts.verde,"#10b981",off);off+=(counts.verde/total)*circ;
+  const d2=seg(counts.amarillo,"#f59e0b",off);off+=(counts.amarillo/total)*circ;
+  const d3=seg(counts.rojo,"#ef4444",off);
+  const donutSvg=`<div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+    <svg viewBox="0 0 180 180" style="width:140px;height:140px;flex-shrink:0">
+      <circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="#e2e8f0" stroke-width="22"/>
+      ${d1}${d2}${d3}
+      <text x="${CX}" y="${CY}-8" font-size="22" font-weight="700" text-anchor="middle" fill="var(--ink)" dy="8">${total}</text>
+      <text x="${CX}" y="${CY}+16" font-size="11" text-anchor="middle" fill="var(--muted)" dy="22">frentes</text>
+    </svg>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:8px"><div style="width:12px;height:12px;border-radius:50%;background:#10b981"></div><span style="font-size:13px">En meta</span><span style="font-family:var(--mono);font-weight:700;margin-left:auto;padding-left:12px">${counts.verde}</span></div>
+      <div style="display:flex;align-items:center;gap:8px"><div style="width:12px;height:12px;border-radius:50%;background:#f59e0b"></div><span style="font-size:13px">En riesgo</span><span style="font-family:var(--mono);font-weight:700;margin-left:auto;padding-left:12px">${counts.amarillo}</span></div>
+      <div style="display:flex;align-items:center;gap:8px"><div style="width:12px;height:12px;border-radius:50%;background:#ef4444"></div><span style="font-size:13px">Crítico</span><span style="font-family:var(--mono);font-weight:700;margin-left:auto;padding-left:12px">${counts.rojo}</span></div>
+    </div>
+  </div>`;
+
   return ph("Resumen Ejecutivo",`Control al ${today()} · ${activos.length} activos · ${paralizados.length} paralizados · ${cerrados.length} cerrados`,true)+`
   <div class="grid g5">
     ${kpi("build",["#dbeafe","#1d4ed8"],"Activos",activos.length,"en desarrollo")}
     ${kpi("dash",["#d1fae5","#047857"],"Avance global",avg+"%","de los activos")}
     ${kpi("hist",["#fee2e2","#b91c1c"],"Críticos",counts.rojo,"🔴 acción")}
     ${kpi("board",["#fef3c7","#b45309"],"Mi pizarra hoy",myToday.length,"tarjetas")}
-    ${kpi("users",["#ede9fe","#6d28d9"],"Sin completar hoy",sinReg,"del equipo")}
+    ${kpi("users",["#ede9fe","#6d28d9"],"Sin actividad hoy",sinReg,"del equipo")}
   </div>
   <div class="grid g3" style="margin-top:14px">
-    <div class="card span2"><div class="card-h">Avance por expediente activo — real vs. esperado</div><div class="card-b"><div style="height:260px"><canvas id="chProj"></canvas></div></div></div>
-    <div class="card"><div class="card-h">Estado de frentes</div><div class="card-b"><div style="height:260px"><canvas id="chStatus"></canvas></div></div></div>
+    <div class="card span2"><div class="card-h">📊 Avance por expediente — real vs. esperado</div><div class="card-b">${barChart}</div></div>
+    <div class="card"><div class="card-h">📊 Estado de frentes</div><div class="card-b">${donutSvg}</div></div>
   </div>
   ${obs.length||paralizados.length?`
   <div class="grid g2" style="margin-top:14px">
     ${paralizados.length?`<div class="card"><div class="card-h">⏸️ Expedientes paralizados</div><div class="card-b">${paralizados.map(p=>`<div style="padding:6px 0;border-bottom:1px solid var(--line)"><span class="codetag paus">${esc(p.code)}</span> <b>${esc(p.name)}</b><div style="font-size:12px;color:var(--muted)">${esc(p.pauseReason||"Sin motivo registrado")}</div></div>`).join("")}</div></div>`:""}
     ${obs.length?`<div class="card"><div class="card-h">🔄 En observaciones</div><div class="card-b">${obs.map(p=>`<div style="padding:6px 0;border-bottom:1px solid var(--line)"><span class="codetag obs">${esc(p.code)}</span> <b>${esc(p.name)}</b></div>`).join("")}</div></div>`:""}
   </div>`:""}`;
-}
-
-function initCharts(){
-  if(typeof Chart==="undefined")return;
-  state.charts.forEach(c=>{try{c.destroy();}catch(e){}});state.charts=[];
-  const T=data.tasks,P=data.projects.filter(p=>p.status==="activo"||p.status==="observacion"||!p.status);
-  const espOf=t=>elapsedPct(pById(t.projectId)||{});
-  const projRows=P.map(p=>{const pt=T.filter(t=>t.projectId===p.id);const r=pt.length?Math.round(pt.reduce((a,t)=>a+(t.pctReal||0),0)/pt.length):0;return {name:p.code,real:r,esp:elapsedPct(p)};});
-  const counts={verde:0,amarillo:0,rojo:0};T.forEach(t=>{const p=pById(t.projectId);if(p&&(p.status==="activo"||p.status==="observacion"||!p.status))counts[statusFor(t.pctReal||0,espOf(t))]++;});
-  const opt={responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true,max:100,ticks:{font:{size:11}}},x:{ticks:{font:{size:11}}}},plugins:{legend:{labels:{font:{size:12},boxWidth:12}}}};
-  const c1=document.getElementById("chProj");
-  if(c1&&projRows.length)state.charts.push(new Chart(c1,{type:"bar",data:{labels:projRows.map(r=>r.name),datasets:[{label:"Esperado",data:projRows.map(r=>r.esp),backgroundColor:"#94a3b8",borderRadius:4},{label:"Real",data:projRows.map(r=>r.real),backgroundColor:"#2563eb",borderRadius:4}]},options:opt}));
-  const c2=document.getElementById("chStatus");
-  if(c2)state.charts.push(new Chart(c2,{type:"doughnut",data:{labels:["En meta","En riesgo","Crítico"],datasets:[{data:[counts.verde,counts.amarillo,counts.rojo],backgroundColor:["#10b981","#f59e0b","#ef4444"],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:"62%",plugins:{legend:{position:"bottom",labels:{font:{size:12},boxWidth:12}}}}}));
 }
 
 /* ============ PROYECTOS ============ */
@@ -573,7 +612,7 @@ function renderProject(p,role){
     ${pt.length?`<div class="scroll"><table><thead><tr><th>Capítulo / Responsable</th><th>Esp.</th><th>Real</th><th>Desv.</th><th>Avance</th><th>Estado</th><th></th></tr></thead><tbody>
       ${pt.map(t=>rowTask(t,p.status==="cerrado"?100:esp)).join("")}
     </tbody></table></div>`:`<div class="card-b" style="text-align:center;color:var(--muted)"><p>Sin frentes registrados.</p>${role==="jefe"&&p.status!=="cerrado"?`<button class="btn line sm" data-act="addtask" data-id="${p.id}" style="margin-top:8px">+ Agregar frente</button>`:""}</div>`}
-    ${role==="jefe"&&p.status!=="cerrado"&&pt.length?`<div style="padding:8px 16px;background:#f8fafc;border-top:1px solid var(--line)"><button class="btn line sm" data-act="addtask" data-id="${p.id}">+ Agregar otro frente</button></div>`:""}
+    ${role==="jefe"&&p.status!=="cerrado"&&pt.length?`<div style="padding:8px 16px;background:#f8fafc;border-top:1px solid var(--line)"><button class="btn line sm" data-act="addtask" data-id="${p.id}">+ Agregar capítulo</button></div>`:""}
   </section>`;
 }
 
@@ -1401,7 +1440,9 @@ function openTask(tid){
     </div>`;
   }
 
-  // Si no tiene subs: slider de avance directo
+  // Si no tiene subs: slider de avance + opción de cargar sub-incisos desde plantilla
+  const tplCap=p.template?TEMPLATES[p.template]?.chapters.find(c=>c.id===t.capId):null;
+  const hasTplSubs=tplCap?.subs?.length>0;
   const noSubsEdit=!hasSubs&&(isJefe||t.assigneeId===state.user.uid)?`<div style="margin-top:14px">
     <label class="t" style="display:block;font-size:12px;margin-bottom:4px">Avance del capítulo</label>
     <input type="range" id="mtask-pct" min="0" max="100" step="5" value="${t.pctReal||0}" oninput="document.getElementById('mtask-lbl').textContent=this.value+'%'"/>
@@ -1411,7 +1452,12 @@ function openTask(tid){
         ?`<span style="font-size:12px;color:var(--accent)">🔨 Ya en pizarra de hoy</span>`
         :`<button class="btn dark sm" onclick="activarFrenteHoy('${tid}')">📋 Activar en mi pizarra de hoy</button>`}
     </div>`:""}
+    ${isJefe&&hasTplSubs?`<div style="margin-top:10px;padding:8px;background:#fffbeb;border-radius:6px;font-size:12px">
+      📋 Este capítulo tiene <b>${tplCap.subs.length} sub-incisos</b> en la plantilla (${tplCap.subs.slice(0,2).map(s=>esc(s)).join(", ")}...).
+      <button class="btn line sm" onclick="cargarSubItemsDePlantilla('${tid}')" style="margin-top:6px;display:block">Cargar sub-incisos de la plantilla</button>
+    </div>`:""}
   </div>`:"";
+
 
   document.getElementById("modal").innerHTML=`<div class="modal"><div class="modal-c" style="max-width:620px">
     <div class="modal-h"><h3>${esc(t.specialty)}</h3><span class="codetag">${esc(p.code||"")}</span><button class="x" onclick="closeModal()">✕</button></div>
@@ -1491,6 +1537,20 @@ async function activarSubItemHoy(tid,subIdx){
     });
     addLog(`Activó sub-inciso en pizarra: ${sub.name}`);
     closeModal();
+  }catch(e){alert("Error: "+e.message);}
+}
+async function cargarSubItemsDePlantilla(tid){
+  const t=data.tasks.find(x=>x.id===tid);if(!t)return;
+  const p=pById(t.projectId)||{};
+  const tpl=p.template?TEMPLATES[p.template]:null;
+  const cap=tpl?.chapters.find(c=>c.id===t.capId);
+  if(!cap?.subs?.length)return alert("Este capítulo no tiene sub-incisos en la plantilla.");
+  if(!confirm(`¿Cargar ${cap.subs.length} sub-incisos de la plantilla "${cap.name}"? Los sub-incisos no tendrán responsable asignado por ahora.`))return;
+  const subItems=cap.subs.map((s,i)=>({id:`${t.capId}_s${i}`,name:s,pctReal:0,assigneeId:null,assigneeName:""}));
+  try{
+    await fb.fs.collection("tasks").doc(tid).update({subItems,updatedAt:new Date().toISOString(),updatedBy:state.profile.name});
+    addLog(`Cargó sub-incisos de plantilla en ${t.specialty} (${p.code})`);
+    openTask(tid);
   }catch(e){alert("Error: "+e.message);}
 }
 async function activarFrenteHoy(tid){
@@ -1808,32 +1868,66 @@ async function deleteProject(pid){
 function openAddTask(pid){
   const p=pById(pid);if(!p)return;
   const tpl=p.template?TEMPLATES[p.template]:null;
-  const subOpts=tpl?tpl.chapters.flatMap(c=>c.subs?c.subs.map(s=>`${c.name} → ${s}`):[]).map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join(""):"";
-  const userOpts=data.users.filter(u=>u.role!=="supervisor").map(u=>`<option value="${u.id}">${esc(u.name)}</option>`).join("");
+  // Solo mostrar capítulos principales, NO sub-incisos
+  const existingCapIds=new Set(data.tasks.filter(t=>t.projectId===pid).map(t=>t.capId));
+  const capOpts=tpl?tpl.chapters
+    .filter(c=>!existingCapIds.has(c.id))
+    .map(c=>`<option value="${esc(c.id)}">${esc(c.name)}${c.subs?.length?` (${c.subs.length} sub-incisos)`:""}</option>`)
+    .join(""):"";
+  const userOpts=data.users.filter(u=>u.role!=="supervisor"&&u.status!=="pendiente").map(u=>`<option value="${u.id}">${esc(u.name)}</option>`).join("");
   document.getElementById("modal").innerHTML=`<div class="modal"><div class="modal-c">
-    <div class="modal-h"><h3>+ Agregar frente de trabajo</h3><button class="x" onclick="closeModal()">✕</button></div>
+    <div class="modal-h"><h3>+ Agregar capítulo</h3><button class="x" onclick="closeModal()">✕</button></div>
     <div class="modal-b">
       <p style="color:var(--muted);font-size:13px;margin:0 0 12px">Expediente: <b>${esc(p.code)} · ${esc(p.name)}</b></p>
-      <label class="fl"><span class="t">Nombre del frente / sub-inciso</span>
-        ${subOpts?`<select id="at-sub-pick" onchange="document.getElementById('at-name').value=this.value"><option value="">— elegir de la plantilla —</option>${subOpts}</select><br><br>`:""}
-        <input id="at-name" placeholder="Ej: Diseño de Pavimentos"/></label>
+      <div class="alert warn" style="margin-bottom:12px;font-size:12px">💡 Los sub-incisos de cada capítulo se gestionan dentro del capítulo (botón "ver"). Este formulario agrega capítulos principales.</div>
+      <label class="fl"><span class="t">Capítulo</span>
+        ${capOpts?`<select id="at-cap-pick" onchange="atPickCap(this,'${pid}')"><option value="">— elegir de la plantilla —</option>${capOpts}</select><br><br>`:""}
+        <input id="at-name" placeholder="Nombre del capítulo (si no está en la plantilla)"/>
+      </label>
       <div class="grid g2">
-        <label class="fl"><span class="t">Responsable</span><select id="at-user"><option value="">— sin asignar —</option>${userOpts}</select></label>
-        <label class="fl"><span class="t">Fecha límite</span><input type="date" id="at-due"/></label>
+        <label class="fl"><span class="t">Responsable principal</span><select id="at-user"><option value="">— sin asignar —</option>${userOpts}</select></label>
+        <label class="fl"><span class="t">% inicial</span><input type="number" id="at-pct" min="0" max="100" value="0"/></label>
       </div>
-      <label class="fl"><span class="t">% inicial</span><input type="number" id="at-pct" min="0" max="100" value="0"/></label>
+      <div id="at-subs-preview" style="margin-top:8px;font-size:12px;color:var(--muted)"></div>
     </div>
     <div class="modal-f">
-      <button class="btn primary" onclick="saveAddTask('${pid}')">Crear frente</button>
+      <button class="btn primary" onclick="saveAddTask('${pid}')">Agregar capítulo</button>
       <button class="btn line" onclick="closeModal()">Cancelar</button>
     </div>
   </div></div>`;
 }
+function atPickCap(sel,pid){
+  const p=pById(pid);const tpl=p?.template?TEMPLATES[p.template]:null;
+  const cap=tpl?.chapters.find(c=>c.id===sel.value);
+  const nameEl=document.getElementById("at-name");
+  const preview=document.getElementById("at-subs-preview");
+  if(cap){
+    if(nameEl)nameEl.value=cap.name;
+    if(preview&&cap.subs?.length)preview.innerHTML=`<b>Sub-incisos que se crearán dentro:</b><ul style="margin:4px 0 0 16px">${cap.subs.map(s=>`<li>${esc(s)}</li>`).join("")}</ul>`;
+    else if(preview)preview.innerHTML="";
+  }
+}
 async function saveAddTask(pid){
-  const name=val("at-name");if(!name)return alert("Escribe el nombre del frente.");
-  const userId=document.getElementById("at-user").value||null;const u=userId?uById(userId):null;
+  const name=val("at-name");if(!name)return alert("Escribe el nombre del capítulo.");
+  const userId=document.getElementById("at-user").value||null;
+  const u=userId?uById(userId):null;
   const pct=valNum("at-pct");
-  try{await fb.fs.collection("tasks").add({projectId:pid,specialty:name,assigneeId:userId,assigneeName:u?.name||"",pctReal:pct,entregables:[],dueDate:val("at-due"),createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),updatedBy:state.profile.name});addLog(`Agregó frente "${name}" a ${pById(pid).code}`);closeModal();}catch(e){alert("Error: "+e.message);}
+  const p=pById(pid);
+  const tpl=p?.template?TEMPLATES[p.template]:null;
+  const capPickEl=document.getElementById("at-cap-pick");
+  const capId=capPickEl?capPickEl.value:"";
+  const cap=tpl?.chapters.find(c=>c.id===capId);
+  const subItems=(cap?.subs?.map((s,i)=>({id:`${capId}_s${i}`,name:s,pctReal:0,assigneeId:null,assigneeName:""})))||[];
+  try{
+    await fb.fs.collection("tasks").add({
+      projectId:pid,specialty:name,capId:capId||`manual_${Date.now()}`,
+      assigneeId:userId,assigneeName:u?.name||"",
+      pctReal:pct,subItems,entregables:[],
+      createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),updatedBy:state.profile.name
+    });
+    addLog(`Agregó capítulo "${name}" a ${p?.code}`);
+    closeModal();
+  }catch(e){alert("Error: "+e.message);}
 }
 
 /* ============ EVENTOS GLOBALES ============ */
