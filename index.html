@@ -834,7 +834,7 @@ async function dropBoardItem(col,ownerId){
   try{
     const pct=col==="done"?100:(it.pct||0);
     await fb.fs.collection("board_items").doc(it.id).update({col,pct,updatedAt:new Date().toISOString()});
-    if(it.taskId)await syncTaskFromBoardItem(it.taskId,pct,it.subItemId||null);
+    if(it.taskId)await syncTaskFromBoardItem(it.taskId,pct,it.subItemId||null,it.id);
   }catch(e){alert("Error: "+e.message);}
   state.dragging=null;
 }
@@ -890,31 +890,42 @@ function openBoardItem(id,userId,date,askDone){
     </div>
   </div></div>`;
 }
-async function syncTaskFromBoardItem(taskId,pct,subItemId){
+async function syncTaskFromBoardItem(taskId,pct,subItemId,boardItemId){
   if(!taskId)return;
   try{
     const t=data.tasks.find(x=>x.id===taskId);
     if(!t)return;
     const subs=t.subItems||[];
     if(subItemId&&subs.length){
-      // Actualizar el sub-inciso específico y recalcular el global
       const newSubs=subs.map((s,i)=>{
         const sid=`${taskId}_${i}`;
         if(sid===subItemId)return {...s,pctReal:pct};
         return s;
       });
-      const globalPct=Math.round(newSubs.reduce((a,s)=>a+(s.pctReal||0),0)/newSubs.length);
+      const assignedSubs=newSubs.filter(s=>s.assigneeId);
+      const globalPct=assignedSubs.length
+        ?Math.round(assignedSubs.reduce((a,s)=>a+(s.pctReal||0),0)/assignedSubs.length)
+        :0;
       await fb.fs.collection("tasks").doc(taskId).update({
         subItems:newSubs,pctReal:globalPct,
         updatedAt:new Date().toISOString(),updatedBy:state.profile.name
       });
     } else {
-      // Sin sub-incisos: actualizar directamente el capítulo
       await fb.fs.collection("tasks").doc(taskId).update({
         pctReal:pct,updatedAt:new Date().toISOString(),updatedBy:state.profile.name
       });
     }
-  }catch(e){/*silencioso*/}
+  }catch(e){
+    // Si falla por permisos, guardar la actualización pendiente en el board_item
+    // para que se aplique cuando el jefe entre al sistema
+    if(boardItemId){
+      try{
+        await fb.fs.collection("board_items").doc(boardItemId).update({
+          pendingTaskSync:{taskId,pct,subItemId:subItemId||null,at:new Date().toISOString()}
+        });
+      }catch(e2){/*ignorar*/}
+    }
+  }
 }
 async function saveBoardItem(id,userId,date){
   const text=val("bi-text");if(!text)return alert("Escribe una descripción.");
@@ -928,7 +939,7 @@ async function saveBoardItem(id,userId,date){
   try{
     if(id)await fb.fs.collection("board_items").doc(id).update({text,projectId,tag,pct,link,updatedAt:new Date().toISOString()});
     else await fb.fs.collection("board_items").add({userId,userName:u?.name||"",date,text,projectId,tag,pct,link,col:"todo",createdBy:state.profile.name,createdAt:new Date().toISOString()});
-    if(existing?.taskId)await syncTaskFromBoardItem(existing.taskId,pct,existing.subItemId||null);
+    if(existing?.taskId)await syncTaskFromBoardItem(existing.taskId,pct,existing.subItemId||null,existing.id);
     addLog(`${id?"Editó":"Creó"} tarjeta de ${u?.name}: "${text.slice(0,40)}"`);
     closeModal();
   }catch(e){alert("Error: "+e.message);}
@@ -1425,8 +1436,9 @@ function openTask(tid){
   const userOpts=`<option value="">— sin asignar —</option>${data.users.filter(u=>u.role!=="supervisor"&&u.status!=="pendiente").map(u=>`<option value="${u.id}">${esc(u.name)}</option>`).join("")}`;
 
   // Avance global: promedio de subs si tiene, o el pctReal directo
-  const globalPct=hasSubs&&subs.length
-    ?Math.round(subs.reduce((a,s)=>a+(s.pctReal||0),0)/subs.length)
+  const assignedSubs=subs.filter(s=>s.assigneeId);
+  const globalPct=hasSubs&&assignedSubs.length
+    ?Math.round(assignedSubs.reduce((a,s)=>a+(s.pctReal||0),0)/assignedSubs.length)
     :(t.pctReal||0);
   const st=STATUS[statusFor(globalPct,esp)];
 
@@ -1519,7 +1531,10 @@ async function saveSubItems(tid){
     const u=assigneeId?uById(assigneeId):null;
     return {...s,pctReal:pct,assigneeId,assigneeName:u?.name||""};
   });
-  const globalPct=subs.length?Math.round(subs.reduce((a,s)=>a+(s.pctReal||0),0)/subs.length):0;
+  const assignedSubs=subs.filter(s=>s.assigneeId);
+  const globalPct=assignedSubs.length
+    ?Math.round(assignedSubs.reduce((a,s)=>a+(s.pctReal||0),0)/assignedSubs.length)
+    :0;
   try{
     await fb.fs.collection("tasks").doc(tid).update({subItems:subs,pctReal:globalPct,updatedAt:new Date().toISOString(),updatedBy:state.profile.name});
     const p=pById(t.projectId)||{};
