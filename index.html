@@ -641,38 +641,71 @@ function renderPizarraHoy(role){
     // Panel "Mis frentes asignados" — solo para la propia persona
     let frentesHtml="";
     if(canInteract&&isMe){
-      const myTasks=data.tasks.filter(t=>t.assigneeId===u.id);
-      const activeTasks=myTasks.filter(t=>{
+      const todayItems=items;
+      const myTasks=data.tasks.filter(t=>{
         const p=pById(t.projectId);
-        return p&&p.status!=="cerrado"&&(t.pctReal||0)<100;
+        if(!p||p.status==="cerrado")return false;
+        const subs=t.subItems||[];
+        if(subs.length>0)return subs.some(s=>s.assigneeId===u.id&&(s.pctReal||0)<100);
+        return t.assigneeId===u.id&&(t.pctReal||0)<100;
       });
-      if(activeTasks.length){
-        const taskItems=activeTasks.map(t=>{
+      if(myTasks.length){
+        const taskItems=myTasks.map(t=>{
           const p=pById(t.projectId)||{};
-          const already=items.find(b=>b.taskId===t.id&&b.col!=="done");
-          const done=items.find(b=>b.taskId===t.id&&b.col==="done");
-          const pct=t.pctReal||0;
-          const pctColor=pct>=80?"var(--green)":pct>=40?"var(--amber)":"var(--muted)";
           const tplIcon=TEMPLATES[p.template]?.icon||"📁";
-          return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)">
-            <span style="font-size:16px">${tplIcon}</span>
-            <div style="flex:1;min-width:0">
-              <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(t.specialty)}</div>
-              <div style="font-size:11px;color:var(--muted)">${esc(p.code||"")} · ${esc(p.name||"")}</div>
-              <div style="display:flex;align-items:center;gap:6px;margin-top:3px">
-                <div class="devbar" style="width:80px;height:5px"><div class="fill" style="width:${pct}%;background:${pctColor}"></div></div>
-                <span style="font-family:var(--mono);font-size:11px;color:${pctColor}">${pct}%</span>
+          const subs=t.subItems||[];
+          if(subs.length>0){
+            const mySubs=subs.map((s,i)=>{
+              if(s.assigneeId!==u.id||(s.pctReal||0)>=100)return "";
+              const subItemId=`${t.id}_${i}`;
+              const already=todayItems.find(b=>b.subItemId===subItemId&&b.col!=="done");
+              const done=todayItems.find(b=>b.subItemId===subItemId&&b.col==="done");
+              const pct=s.pctReal||0;
+              const pctColor=pct>=80?"var(--green)":pct>=40?"var(--amber)":"var(--muted)";
+              return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0 5px 12px;border-bottom:1px solid var(--line)">
+                <span style="font-size:11px;color:var(--muted)">└</span>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(s.name)}</div>
+                  <div style="display:flex;align-items:center;gap:4px;margin-top:2px">
+                    <div class="devbar" style="width:60px;height:4px"><div class="fill" style="width:${pct}%;background:${pctColor}"></div></div>
+                    <span style="font-family:var(--mono);font-size:10px;color:${pctColor}">${pct}%</span>
+                  </div>
+                </div>
+                ${done?`<span style="font-size:11px;color:var(--green);white-space:nowrap">✅ hecho</span>`
+                  :already?`<span style="font-size:11px;color:var(--accent);white-space:nowrap">🔨 activo</span>`
+                  :`<button class="btn line sm" onclick="activarSubItemHoy('${t.id}',${i})" style="font-size:11px;white-space:nowrap">Activar →</button>`}
+              </div>`;
+            }).filter(Boolean).join("");
+            if(!mySubs)return "";
+            return `<div style="border-bottom:1px solid var(--line)">
+              <div style="display:flex;align-items:center;gap:8px;padding:7px 0">
+                <span style="font-size:14px">${tplIcon}</span>
+                <div><div style="font-size:13px;font-weight:600">${esc(t.specialty)}</div>
+                <div style="font-size:11px;color:var(--muted)">${esc(p.code||"")} · ${esc(p.name||"")}</div></div>
+              </div>${mySubs}</div>`;
+          } else {
+            const already=todayItems.find(b=>b.taskId===t.id&&b.col!=="done");
+            const done=todayItems.find(b=>b.taskId===t.id&&b.col==="done");
+            const pct=t.pctReal||0;
+            const pctColor=pct>=80?"var(--green)":pct>=40?"var(--amber)":"var(--muted)";
+            return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)">
+              <span style="font-size:16px">${tplIcon}</span>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(t.specialty)}</div>
+                <div style="font-size:11px;color:var(--muted)">${esc(p.code||"")} · ${esc(p.name||"")}</div>
+                <div style="display:flex;align-items:center;gap:6px;margin-top:3px">
+                  <div class="devbar" style="width:80px;height:5px"><div class="fill" style="width:${pct}%;background:${pctColor}"></div></div>
+                  <span style="font-family:var(--mono);font-size:11px;color:${pctColor}">${pct}%</span>
+                </div>
               </div>
-            </div>
-            ${done
-              ?`<span style="font-size:11px;color:var(--green);font-weight:500;white-space:nowrap">✅ Completado hoy</span>`
-              :already
-                ?`<span style="font-size:11px;color:var(--accent);font-weight:500;white-space:nowrap">🔨 Ya en pizarra</span>`
-                :`<button class="btn line sm" onclick="activarFrenteHoy('${t.id}')" style="white-space:nowrap">Activar hoy →</button>`}
-          </div>`;
-        }).join("");
-        frentesHtml=`<div style="background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-bottom:12px">
-          <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:6px">📂 Mis frentes asignados (${activeTasks.length})</div>
+              ${done?`<span style="font-size:11px;color:var(--green);font-weight:500;white-space:nowrap">✅ hecho</span>`
+                :already?`<span style="font-size:11px;color:var(--accent);font-weight:500;white-space:nowrap">🔨 activo</span>`
+                :`<button class="btn line sm" onclick="activarFrenteHoy('${t.id}')" style="white-space:nowrap">Activar →</button>`}
+            </div>`;
+          }
+        }).filter(Boolean).join("");
+        if(taskItems)frentesHtml=`<div style="background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-bottom:12px">
+          <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:4px">📂 Mis frentes asignados</div>
           ${taskItems}
         </div>`;
       }
@@ -1315,29 +1348,82 @@ function viewBitacora(){
 function openTask(tid){
   const t=data.tasks.find(x=>x.id===tid);if(!t)return;
   const p=pById(t.projectId)||{};
-  const esp=elapsedPct(p),st=STATUS[statusFor(t.pctReal||0,esp)];
-  const canEdit=t.assigneeId===state.user.uid||state.profile.role==="jefe";
-  const canComment=state.profile.role==="jefe"||state.profile.role==="supervisor"||t.assigneeId===state.user.uid;
+  const esp=elapsedPct(p);
+  const subs=t.subItems||[];
+  const hasSubs=subs.length>0;
+  const canEdit=state.profile.role==="jefe"||(!hasSubs&&t.assigneeId===state.user.uid)||
+    (hasSubs&&subs.some(s=>s.assigneeId===state.user.uid));
+  const canComment=state.profile.role==="jefe"||state.profile.role==="supervisor"||
+    t.assigneeId===state.user.uid||(hasSubs&&subs.some(s=>s.assigneeId===state.user.uid));
+  const isJefe=state.profile.role==="jefe";
   const todayI=todayISO();
-  const existingBoardItem=t.assigneeId?data.boardItems.find(b=>b.userId===t.assigneeId&&b.date===todayI&&b.taskId===tid&&b.col!=="done"):null;
-  const canRegister=t.assigneeId===state.user.uid;
-  document.getElementById("modal").innerHTML=`<div class="modal"><div class="modal-c">
+  const userOpts=`<option value="">— sin asignar —</option>${data.users.filter(u=>u.role!=="supervisor"&&u.status!=="pendiente").map(u=>`<option value="${u.id}">${esc(u.name)}</option>`).join("")}`;
+
+  // Avance global: promedio de subs si tiene, o el pctReal directo
+  const globalPct=hasSubs&&subs.length
+    ?Math.round(subs.reduce((a,s)=>a+(s.pctReal||0),0)/subs.length)
+    :(t.pctReal||0);
+  const st=STATUS[statusFor(globalPct,esp)];
+
+  // Sub-incisos HTML
+  let subsHtml="";
+  if(hasSubs){
+    const subRows=subs.map((s,i)=>{
+      const isMyS=s.assigneeId===state.user.uid;
+      const canEditS=isJefe||isMyS;
+      const alreadyBoard=data.boardItems.find(b=>b.subItemId===`${tid}_${i}`&&b.userId===state.user.uid&&b.date===todayI&&b.col!=="done");
+      const doneBoard=data.boardItems.find(b=>b.subItemId===`${tid}_${i}`&&b.userId===state.user.uid&&b.date===todayI&&b.col==="done");
+      const pctColor=(s.pctReal||0)>=80?"var(--green)":(s.pctReal||0)>=40?"var(--amber)":"var(--muted)";
+      return `<div style="padding:10px;border:1px solid var(--line);border-radius:8px;margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-size:13px;font-weight:500;flex:1">${esc(s.name)}</span>
+          <span style="font-family:var(--mono);font-size:12px;font-weight:700;color:${pctColor}">${s.pctReal||0}%</span>
+        </div>
+        <div class="devbar" style="height:5px;margin:5px 0 8px"><div class="fill" style="width:${s.pctReal||0}%;background:${pctColor}"></div></div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          ${isJefe?`<select id="sub-user-${i}" onchange="updateSubAssignee('${tid}',${i},this.value)" style="font-size:12px;padding:3px 6px;flex:1;min-width:120px">${userOpts.replace(`value="${s.assigneeId||""}"`,`value="${s.assigneeId||""}" selected`)}</select>`
+            :`<span style="font-size:12px;color:var(--muted)">👤 ${s.assigneeId?esc(s.assigneeName||""):"sin asignar"}</span>`}
+          ${canEditS?`<input type="range" id="sub-pct-${i}" min="0" max="100" step="5" value="${s.pctReal||0}" oninput="document.getElementById('sub-lbl-${i}').textContent=this.value+'%'" style="width:100px;accent-color:var(--accent)"/><span id="sub-lbl-${i}" style="font-family:var(--mono);font-size:11px;min-width:32px">${s.pctReal||0}%</span>`:""}
+          ${(isMyS||doneBoard)?
+            doneBoard?`<span style="font-size:11px;color:var(--green);font-weight:500">✅ Completado hoy</span>`:
+            alreadyBoard?`<span style="font-size:11px;color:var(--accent);font-weight:500">🔨 En pizarra</span>`:
+            `<button class="btn line sm" onclick="activarSubItemHoy('${tid}',${i})">Activar hoy →</button>`:""}
+        </div>
+      </div>`;
+    }).join("");
+    subsHtml=`<div style="margin-top:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <b style="font-size:12px;color:var(--muted);text-transform:uppercase">Sub-incisos (${subs.length})</b>
+        ${isJefe?`<button class="btn line sm" onclick="addSubItem('${tid}')">+ Agregar sub-inciso</button>`:""}
+      </div>
+      ${subRows}
+      ${isJefe?`<button class="btn primary sm" onclick="saveSubItems('${tid}')" style="margin-top:6px">Guardar cambios</button>`:""}
+    </div>`;
+  }
+
+  // Si no tiene subs: slider de avance directo
+  const noSubsEdit=!hasSubs&&(isJefe||t.assigneeId===state.user.uid)?`<div style="margin-top:14px">
+    <label class="t" style="display:block;font-size:12px;margin-bottom:4px">Avance del capítulo</label>
+    <input type="range" id="mtask-pct" min="0" max="100" step="5" value="${t.pctReal||0}" oninput="document.getElementById('mtask-lbl').textContent=this.value+'%'"/>
+    <div style="text-align:right;font-family:var(--mono);font-weight:600" id="mtask-lbl">${t.pctReal||0}%</div>
+    ${!hasSubs&&!isJefe?`<div style="margin-top:8px">
+      ${data.boardItems.find(b=>b.taskId===tid&&b.userId===state.user.uid&&b.date===todayI&&b.col!=="done")
+        ?`<span style="font-size:12px;color:var(--accent)">🔨 Ya en pizarra de hoy</span>`
+        :`<button class="btn dark sm" onclick="activarFrenteHoy('${tid}')">📋 Activar en mi pizarra de hoy</button>`}
+    </div>`:""}
+  </div>`:"";
+
+  document.getElementById("modal").innerHTML=`<div class="modal"><div class="modal-c" style="max-width:620px">
     <div class="modal-h"><h3>${esc(t.specialty)}</h3><span class="codetag">${esc(p.code||"")}</span><button class="x" onclick="closeModal()">✕</button></div>
     <div class="modal-b">
-      <p style="margin:0 0 12px;color:var(--muted);font-size:13px">${esc(p.name||"")}${t.dueDate?` · vence ${fmtDate(t.dueDate)}`:""}</p>
-      <div class="devbar"><div class="fill" style="width:${t.pctReal||0}%;background:${st.hex}"></div><div class="tick" style="left:${Math.min(esp,100)}%"></div></div>
-      <div class="devsub"><span>real ${t.pctReal||0}%</span><span>esp. ${esp}%</span></div>
-      ${canEdit?`<div style="margin-top:14px"><label class="t" style="display:block;font-size:12px;margin-bottom:4px">Avance</label>
-        <input type="range" id="mtask-pct" min="0" max="100" step="5" value="${t.pctReal||0}" oninput="document.getElementById('mtask-lbl').textContent=this.value+'%'"/>
-        <div style="text-align:right;font-family:var(--mono);font-weight:600" id="mtask-lbl">${t.pctReal||0}%</div></div>`:""}
-      ${canRegister?`<div style="margin-top:12px;padding:10px;background:#eff6ff;border-radius:8px">
-        ${existingBoardItem
-          ?`<p style="margin:0 0 8px;font-size:12px;color:#1e40af">📋 Ya tienes una tarjeta de hoy para este frente.</p><button class="btn dark sm" onclick="openBoardItem('${existingBoardItem.id}','${existingBoardItem.userId}','${existingBoardItem.date}')">Ver en mi pizarra de hoy</button>`
-          :`<p style="margin:0 0 8px;font-size:12px;color:#1e40af">📋 Registra que hoy trabajaste en este frente — esto cuenta para tu jornada y desempeño.</p><button class="btn dark sm" onclick="registerTaskInBoard('${tid}')">+ Registrar en mi pizarra de hoy</button>`}
-      </div>`:""}
+      <p style="margin:0 0 8px;color:var(--muted);font-size:13px">${esc(p.name||"")}</p>
+      <div class="devbar"><div class="fill" style="width:${globalPct}%;background:${st.hex}"></div><div class="tick" style="left:${Math.min(esp,100)}%"></div></div>
+      <div class="devsub"><span>real ${globalPct}% ${hasSubs?"(promedio subs)":""}</span><span>esp. ${esp}%</span></div>
+      ${hasSubs?"":noSubsEdit}
+      ${subsHtml}
       <label class="fl" style="margin-top:10px"><span class="t">🔗 Enlace al trabajo</span>
         <input id="mtask-link" value="${esc(t.link||"")}" placeholder="Pega el link aquí..." ${!canEdit?"readonly":""}/></label>
-      ${p.driveLink?`<div style="font-size:12px;color:var(--accent);margin-top:-6px;margin-bottom:10px">📁 Drive del expediente: <a href="${esc(p.driveLink)}" target="_blank">abrir carpeta raíz</a></div>`:""}
+      ${p.driveLink?`<div style="font-size:12px;color:var(--accent);margin-top:-6px;margin-bottom:10px">📁 <a href="${esc(p.driveLink)}" target="_blank">Abrir Drive del expediente</a></div>`:""}
       <div style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px">
         <b style="font-size:12px;color:var(--muted);text-transform:uppercase">Comentarios y observaciones</b>
         <div style="margin-top:6px">${commentThread(cFor(t.id))}</div>
@@ -1345,11 +1431,67 @@ function openTask(tid){
       </div>
     </div>
     <div class="modal-f">
-      ${canEdit?`<button class="btn primary" onclick="saveTaskModal('${tid}')">Guardar</button>`:""}
-      ${state.profile.role==="jefe"?`<button class="btn line" onclick="deleteTask('${tid}')">Eliminar</button>`:""}
+      ${!hasSubs&&canEdit?`<button class="btn primary" onclick="saveTaskModal('${tid}')">Guardar</button>`:""}
+      ${isJefe?`<button class="btn line" onclick="deleteTask('${tid}')">Eliminar</button>`:""}
       <button class="btn line" onclick="closeModal()">Cerrar</button>
     </div>
   </div></div>`;
+}
+async function saveSubItems(tid){
+  const t=data.tasks.find(x=>x.id===tid);if(!t)return;
+  const subs=(t.subItems||[]).map((s,i)=>{
+    const pctEl=document.getElementById(`sub-pct-${i}`);
+    const userEl=document.getElementById(`sub-user-${i}`);
+    const pct=pctEl?Number(pctEl.value)||0:s.pctReal||0;
+    const assigneeId=userEl?userEl.value||null:s.assigneeId||null;
+    const u=assigneeId?uById(assigneeId):null;
+    return {...s,pctReal:pct,assigneeId,assigneeName:u?.name||""};
+  });
+  const globalPct=subs.length?Math.round(subs.reduce((a,s)=>a+(s.pctReal||0),0)/subs.length):0;
+  try{
+    await fb.fs.collection("tasks").doc(tid).update({subItems:subs,pctReal:globalPct,updatedAt:new Date().toISOString(),updatedBy:state.profile.name});
+    const p=pById(t.projectId)||{};
+    addLog(`Actualizó sub-incisos de ${t.specialty} (${p.code||""}) → ${globalPct}%`);
+    openTask(tid);
+  }catch(e){alert("Error: "+e.message);}
+}
+async function updateSubAssignee(tid,idx,assigneeId){
+  const t=data.tasks.find(x=>x.id===tid);if(!t)return;
+  const subs=[...(t.subItems||[])];
+  const u=assigneeId?uById(assigneeId):null;
+  subs[idx]={...subs[idx],assigneeId:assigneeId||null,assigneeName:u?.name||""};
+  try{await fb.fs.collection("tasks").doc(tid).update({subItems:subs,updatedAt:new Date().toISOString(),updatedBy:state.profile.name});}
+  catch(e){console.error(e);}
+}
+async function addSubItem(tid){
+  const name=prompt("Nombre del sub-inciso:");
+  if(!name)return;
+  const t=data.tasks.find(x=>x.id===tid);if(!t)return;
+  const subs=[...(t.subItems||[]),{id:`${t.capId}_s${Date.now()}`,name,pctReal:0,assigneeId:null,assigneeName:""}];
+  try{
+    await fb.fs.collection("tasks").doc(tid).update({subItems:subs,updatedAt:new Date().toISOString(),updatedBy:state.profile.name});
+    openTask(tid);
+  }catch(e){alert("Error: "+e.message);}
+}
+async function activarSubItemHoy(tid,subIdx){
+  const t=data.tasks.find(x=>x.id===tid);if(!t)return;
+  const p=pById(t.projectId)||{};
+  const sub=(t.subItems||[])[subIdx];if(!sub)return;
+  const todayI=todayISO();
+  const subItemId=`${tid}_${subIdx}`;
+  const already=data.boardItems.find(b=>b.subItemId===subItemId&&b.userId===state.user.uid&&b.date===todayI&&b.col!=="done");
+  if(already){closeModal();return;}
+  try{
+    await fb.fs.collection("board_items").add({
+      userId:state.user.uid,userName:state.profile.name,date:todayI,
+      text:`${sub.name} — ${t.specialty}${p.code?` (${p.code})`:""}`,
+      projectId:t.projectId||null,taskId:tid,subItemId,
+      tag:"plan",pct:sub.pctReal||0,link:"",col:"doing",
+      createdBy:state.profile.name,createdAt:new Date().toISOString()
+    });
+    addLog(`Activó sub-inciso en pizarra: ${sub.name}`);
+    closeModal();
+  }catch(e){alert("Error: "+e.message);}
 }
 async function activarFrenteHoy(tid){
   const t=data.tasks.find(x=>x.id===tid);if(!t)return;
@@ -1569,7 +1711,8 @@ async function saveNewProject(){
         const pct=valNum(`cap-pct-${i}`);
         const userId=document.getElementById(`cap-user-${i}`).value||null;
         const u=userId?uById(userId):null;
-        await fb.fs.collection("tasks").add({projectId:ref.id,specialty:cap.name,capId:cap.id,assigneeId:userId,assigneeName:u?.name||"",pctReal:pct,entregables:[],createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),updatedBy:state.profile.name});
+        const subItems=(cap.subs||[]).map((s,si)=>({id:`${cap.id}_s${si}`,name:s,pctReal:0,assigneeId:null,assigneeName:""}));
+        await fb.fs.collection("tasks").add({projectId:ref.id,specialty:cap.name,capId:cap.id,assigneeId:userId,assigneeName:u?.name||"",pctReal:pct,subItems,entregables:[],createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),updatedBy:state.profile.name});
       }
       closeModal();
     }catch(e){alert("Error: "+e.message);}
@@ -1592,7 +1735,8 @@ async function saveNewProject(){
       addLog(`Creó expediente de observaciones ${code} (plantilla ${t.name})`);
       for(const {cap,userId} of selected){
         const u=userId?uById(userId):null;
-        await fb.fs.collection("tasks").add({projectId:ref.id,specialty:cap.name+" (OBS)",capId:cap.id,assigneeId:userId,assigneeName:u?.name||"",pctReal:0,entregables:[],createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),updatedBy:state.profile.name});
+        const subItems=(cap.subs||[]).map((s,si)=>({id:`${cap.id}_s${si}`,name:s,pctReal:0,assigneeId:null,assigneeName:""}));
+        await fb.fs.collection("tasks").add({projectId:ref.id,specialty:cap.name+" (OBS)",capId:cap.id,assigneeId:userId,assigneeName:u?.name||"",pctReal:0,subItems,entregables:[],createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),updatedBy:state.profile.name});
       }
       closeModal();
     }catch(e){alert("Error: "+e.message);}
@@ -1722,4 +1866,3 @@ function bindEvents(){
 </script>
 </body>
 </html>
-
