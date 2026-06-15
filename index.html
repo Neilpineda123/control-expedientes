@@ -970,10 +970,19 @@ async function quickDeleteBoardItem(id){
 }
 async function continuePending(itemId,todayI){
   const it=data.boardItems.find(x=>x.id===itemId);if(!it)return;
+  // Verificar que no exista ya una tarjeta de hoy con el mismo taskId/subItemId
+  const dupCheck=data.boardItems.find(b=>
+    b.userId===it.userId&&b.date===todayI&&b.col!=="done"&&
+    ((it.subItemId&&b.subItemId===it.subItemId)||(it.taskId&&!it.subItemId&&b.taskId===it.taskId&&!b.subItemId)||(b.continuedFrom===it.id))
+  );
+  if(dupCheck)return; // ya existe, no crear duplicado
   try{
     await fb.fs.collection("board_items").add({
-      userId:it.userId,userName:it.userName||"",date:todayI,text:it.text,projectId:it.projectId||null,
-      tag:it.tag||"plan",pct:it.pct||0,link:it.link||"",col:it.col==="doing"?"doing":"todo",
+      userId:it.userId,userName:it.userName||"",date:todayI,
+      text:it.text,projectId:it.projectId||null,
+      taskId:it.taskId||null,subItemId:it.subItemId||null, // heredar vínculos
+      tag:it.tag||"plan",pct:it.pct||0,link:it.link||"",
+      col:it.col==="doing"?"doing":"todo",
       continuedFrom:it.id,createdBy:state.profile.name,createdAt:new Date().toISOString()
     });
     await fb.fs.collection("board_items").doc(it.id).update({carriedOver:true,updatedAt:new Date().toISOString()});
@@ -1566,8 +1575,14 @@ async function activarSubItemHoy(tid,subIdx){
   const sub=(t.subItems||[])[subIdx];if(!sub)return;
   const todayI=todayISO();
   const subItemId=`${tid}_${subIdx}`;
-  const already=data.boardItems.find(b=>b.subItemId===subItemId&&b.userId===state.user.uid&&b.date===todayI&&b.col!=="done");
-  if(already){closeModal();return;}
+  // Detección amplia: por subItemId O por taskId+mismo texto (tarjeta continuada)
+  const already=data.boardItems.find(b=>
+    b.userId===state.user.uid&&b.date===todayI&&b.col!=="done"&&
+    (b.subItemId===subItemId||(b.taskId===tid&&b.subItemId===subItemId))
+  );
+  if(already)return;
+  // Deshabilitar botón inmediatamente para evitar doble clic por lag
+  const btn=event?.target;if(btn){btn.disabled=true;btn.textContent="Activando...";}
   try{
     await fb.fs.collection("board_items").add({
       userId:state.user.uid,userName:state.profile.name,date:todayI,
@@ -1577,8 +1592,7 @@ async function activarSubItemHoy(tid,subIdx){
       createdBy:state.profile.name,createdAt:new Date().toISOString()
     });
     addLog(`Activó sub-inciso en pizarra: ${sub.name}`);
-    closeModal();
-  }catch(e){alert("Error: "+e.message);}
+  }catch(e){alert("Error: "+e.message);if(btn){btn.disabled=false;btn.textContent="Activar →";}}
 }
 async function cargarSubItemsDePlantilla(tid){
   const t=data.tasks.find(x=>x.id===tid);if(!t)return;
@@ -1598,8 +1612,13 @@ async function activarFrenteHoy(tid){
   const t=data.tasks.find(x=>x.id===tid);if(!t)return;
   const p=pById(t.projectId)||{};
   const todayI=todayISO();
-  const already=data.boardItems.find(b=>b.taskId===tid&&b.userId===state.user.uid&&b.date===todayI&&b.col!=="done");
+  // Detección amplia: por taskId sin subItemId O continuedFrom con ese taskId
+  const already=data.boardItems.find(b=>
+    b.userId===state.user.uid&&b.date===todayI&&b.col!=="done"&&
+    b.taskId===tid&&!b.subItemId
+  );
   if(already)return;
+  const btn=event?.target;if(btn){btn.disabled=true;btn.textContent="Activando...";}
   try{
     await fb.fs.collection("board_items").add({
       userId:state.user.uid,userName:state.profile.name,date:todayI,
@@ -1609,7 +1628,7 @@ async function activarFrenteHoy(tid){
       createdBy:state.profile.name,createdAt:new Date().toISOString()
     });
     addLog(`Activó en pizarra: ${t.specialty} (${p.code||""})`);
-  }catch(e){alert("Error: "+e.message);}
+  }catch(e){alert("Error: "+e.message);if(btn){btn.disabled=false;btn.textContent="Activar →";}}
 }
 async function registerTaskInBoard(tid){
   const t=data.tasks.find(x=>x.id===tid);if(!t)return;
