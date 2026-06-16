@@ -322,8 +322,18 @@ window.addEventListener("DOMContentLoaded",()=>{
   if(!isConfigured()){document.getElementById("app").innerHTML='<div style="padding:30px;text-align:center"><p>Configuración pendiente.</p></div>';return;}
   try{fb.app=firebase.initializeApp(FIREBASE_CONFIG);fb.auth=firebase.auth();fb.fs=firebase.firestore();}catch(e){console.error(e);return;}
   fb.auth.onAuthStateChanged(async user=>{
-    if(user){state.user=user;try{state.profile=await ensureProfile(user);}catch(e){console.error(e);}
-      attachListeners();state.tab="resumen";render();}
+    if(user){
+      state.user=user;
+      try{
+        state.profile=await ensureProfile(user);
+        // Si el perfil es rechazado, cerrar sesión inmediatamente
+        if(state.profile.status==="rechazado"){
+          await fb.auth.signOut();
+          return;
+        }
+      }catch(e){console.error(e);}
+      attachListeners();state.tab="resumen";render();
+    }
     else{state.user=null;state.profile=null;detachListeners();renderLogin();}
   });
   bindEvents();
@@ -334,12 +344,32 @@ async function ensureProfile(user){
   const snap=await ref.get();
   const isJefe=(JEFE_EMAILS||[]).map(e=>(e||"").toLowerCase()).includes((user.email||"").toLowerCase());
   if(!snap.exists){
-    const prof={name:state.pendingName||(user.email||"Usuario").split("@")[0],email:user.email||"",role:isJefe?"jefe":"colaborador",status:isJefe?"aprobado":"pendiente",area:""};
-    await ref.set(prof);state.pendingName=null;return {id:user.uid,...prof};
+    // Usuario nuevo — siempre empieza como pendiente (excepto jefe)
+    const prof={
+      name:state.pendingName||(user.email||"Usuario").split("@")[0],
+      email:user.email||"",
+      role:isJefe?"jefe":"colaborador",
+      status:isJefe?"aprobado":"pendiente",
+      area:""
+    };
+    await ref.set(prof);
+    state.pendingName=null;
+    return {id:user.uid,...prof};
   }
   const prof=snap.data();
-  if(isJefe&&prof.role!=="jefe"){await ref.update({role:"jefe",status:"aprobado"});prof.role="jefe";prof.status="aprobado";}
-  if(!prof.status)await ref.update({status:"aprobado"});
+  // Si fue rechazado, no permitir entrada
+  if(prof.status==="rechazado"){
+    return {id:user.uid,...prof};
+  }
+  if(isJefe&&prof.role!=="jefe"){
+    await ref.update({role:"jefe",status:"aprobado"});
+    prof.role="jefe";prof.status="aprobado";
+  }
+  // Usuarios viejos sin campo status → aprobar automáticamente (migración)
+  if(!prof.status){
+    await ref.update({status:"aprobado"});
+    prof.status="aprobado";
+  }
   return {id:user.uid,...prof};
 }
 async function aprobarUsuario(uid){
@@ -347,9 +377,17 @@ async function aprobarUsuario(uid){
   const u=uById(uid);addLog(`Aprobó acceso de ${u?.name||uid}`);
 }
 async function rechazarUsuario(uid){
-  if(!confirm("¿Rechazar y eliminar este acceso? El usuario no podrá entrar al sistema."))return;
-  await fb.fs.collection("users").doc(uid).update({status:"rechazado"});
-  const u=uById(uid);addLog(`Rechazó acceso de ${u?.name||uid}`);
+  if(!confirm("¿Rechazar este acceso? El usuario no podrá ingresar al sistema."))return;
+  try{
+    await fb.fs.collection("users").doc(uid).update({
+      status:"rechazado",
+      role:"colaborador",
+      rejectedAt:new Date().toISOString(),
+      rejectedBy:state.profile.name
+    });
+    const u=uById(uid);
+    addLog(`Rechazó acceso de ${u?.name||uid}`);
+  }catch(e){alert("Error: "+e.message);}
 }
 async function doLogin(){const em=val("li-email"),pw=val("li-pass");if(!em||!pw)return showErr("Escribe correo y contraseña.");try{await fb.auth.signInWithEmailAndPassword(em,pw);}catch(e){showErr(traduce(e.code));}}
 async function doRegister(){const nm=val("rg-name"),em=val("rg-email"),pw=val("rg-pass");if(!nm||!em||!pw)return showErr("Completa nombre, correo y contraseña.");if(pw.length<6)return showErr("Mínimo 6 caracteres.");state.pendingName=nm;try{await fb.auth.createUserWithEmailAndPassword(em,pw);}catch(e){showErr(traduce(e.code));}}
@@ -383,7 +421,23 @@ function ph(t,s,blue){return `<div class="ph ${blue?"blue":""}"><h2>${esc(t)}</h
 function render(){
   if(!state.user)return renderLogin();
   if(!state.profile)return;
+  // Verificar status en tiempo real desde onSnapshot de users
+  const freshProfile=data.users.find(u=>u.id===state.user.uid);
+  if(freshProfile){
+    state.profile={...state.profile,...freshProfile};
+  }
   const status=state.profile.status||"aprobado";
+  if(status==="rechazado"){
+    // Cerrar sesión automáticamente — si fue rechazado mientras estaba activo
+    setTimeout(()=>fb.auth.signOut(),1500);
+    return setApp(`<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--paper)">
+      <div class="card" style="max-width:420px;width:90%;text-align:center;padding:32px">
+        <div style="font-size:48px;margin-bottom:12px">🚫</div>
+        <h2 style="margin:0 0 8px">Acceso denegado</h2>
+        <p style="color:var(--muted);margin:0 0 20px">Tu acceso fue revocado. Comunícate con el jefe de proyecto si crees que es un error.</p>
+        <button class="btn line" onclick="doLogout()">Cerrar sesión ahora</button>
+      </div></div>`);
+  }
   if(status==="pendiente"){
     return setApp(`<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--paper)">
       <div class="card" style="max-width:420px;width:90%;text-align:center;padding:32px">
@@ -391,15 +445,6 @@ function render(){
         <h2 style="margin:0 0 8px">Acceso pendiente de aprobación</h2>
         <p style="color:var(--muted);margin:0 0 20px">Tu cuenta fue creada pero necesita ser aprobada por el jefe de proyecto antes de que puedas ingresar. Te avisarán cuando esté lista.</p>
         <p style="font-size:12px;color:var(--muted)">Sesión iniciada como <b>${esc(state.profile.email)}</b></p>
-        <button class="btn line" onclick="doLogout()" style="margin-top:16px">Cerrar sesión</button>
-      </div></div>`);
-  }
-  if(status==="rechazado"){
-    return setApp(`<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--paper)">
-      <div class="card" style="max-width:420px;width:90%;text-align:center;padding:32px">
-        <div style="font-size:48px;margin-bottom:12px">🚫</div>
-        <h2 style="margin:0 0 8px">Acceso denegado</h2>
-        <p style="color:var(--muted);margin:0 0 20px">Tu solicitud de acceso fue rechazada. Comunícate con el jefe de proyecto si crees que es un error.</p>
         <button class="btn line" onclick="doLogout()" style="margin-top:16px">Cerrar sesión</button>
       </div></div>`);
   }
@@ -2020,3 +2065,4 @@ function bindEvents(){
 </script>
 </body>
 </html>
+
